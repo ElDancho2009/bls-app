@@ -37,7 +37,7 @@ app.post('/api/matches/:id/result', (req, res) => {
     return res.status(404).json({ error: 'Match not found.' });
   }
 
-  const { home_score, away_score } = req.body;
+  const { home_score, away_score } = req.body || {};
   if (
     !Number.isInteger(home_score) ||
     !Number.isInteger(away_score) ||
@@ -70,6 +70,12 @@ app.post('/api/matches/:id/result', (req, res) => {
   const awayTeam = db.prepare('SELECT * FROM teams WHERE id = ?').get(match.away_team_id);
 
   res.json({ match: updatedMatch, teams: [homeTeam, awayTeam] });
+});
+
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({ error: status === 500 ? 'Internal server error.' : err.message });
 });
 
 app.listen(PORT, () => {
