@@ -7,7 +7,7 @@ db.exec('PRAGMA foreign_keys = ON');
 db.exec(`
   CREATE TABLE IF NOT EXISTS teams (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
     borough TEXT NOT NULL,
     points INTEGER NOT NULL DEFAULT 0
   )
