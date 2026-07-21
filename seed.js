@@ -3,10 +3,17 @@ const { recalculateTeamPoints } = require('./points.js');
 const { hashPassword } = require('./auth.js');
 
 const teams = [
-  { name: 'Brooklyn Kickers FC', borough: 'Brooklyn', division: 'queens', points: 0 },
-  { name: 'Queens United SC', borough: 'Queens', division: 'queens', points: 0 },
-  { name: 'Manhattan Strikers FC', borough: 'Manhattan', division: 'bronx', points: 0 },
-  { name: 'Bronx Rovers FC', borough: 'Bronx', division: 'bronx', points: 0 },
+  { name: 'Apex United FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Black Wolves FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'FC Mosaico', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Gugo FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Hikmah FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Inter Bushwick FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Marine FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Stuy FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Valor FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Vaux FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
+  { name: 'Viper FC', borough: 'Brooklyn', division: 'brooklyn', points: 0 },
 ];
 
 const insertTeam = db.prepare(
@@ -59,273 +66,133 @@ const teamIdByName = Object.fromEntries(
     .map((row) => [row.name, row.id])
 );
 
-const playersByTeam = {
-  'Brooklyn Kickers FC': [
-    { name: 'Marcus Reyes', position: 'MF', number: 10, goals: 9, assists: 4, apps: 14, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 84 },
-    { name: 'Jalen Osei', position: 'FW', number: 9, goals: 3, assists: 7, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 78 },
-    { name: 'Devon Clarke', position: 'DF', number: 4, goals: 0, assists: 1, apps: 14, yellow_cards: 3, red_cards: 0, clean_sheets: 0, rating: 72 },
-    { name: 'Elijah Ward', position: 'GK', number: 1, goals: 0, assists: 0, apps: 14, yellow_cards: 0, red_cards: 0, clean_sheets: 7, rating: 75 },
-    { name: 'Sam Rutherford', position: 'DF', number: 2, goals: 0, assists: 1, apps: 12, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 68 },
-    { name: 'Miguel Torres', position: 'DF', number: 3, goals: 1, assists: 0, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 70 },
-    { name: 'Andre Blake', position: 'DF', number: 5, goals: 0, assists: 0, apps: 10, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 66 },
-    { name: 'Chris Duval', position: 'MF', number: 6, goals: 2, assists: 3, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 74 },
-    { name: 'Noah Kim', position: 'MF', number: 8, goals: 1, assists: 2, apps: 11, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 69 },
-    { name: 'Leo Faison', position: 'FW', number: 7, goals: 4, assists: 1, apps: 12, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 73 },
-    { name: 'Adrian Souza', position: 'FW', number: 11, goals: 2, assists: 1, apps: 9, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 67 },
-  ],
-  'Queens United SC': [
-    { name: 'Ravi Patel', position: 'MF', number: 8, goals: 6, assists: 5, apps: 14, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 80 },
-    { name: 'Yusuf Demir', position: 'FW', number: 11, goals: 11, assists: 2, apps: 14, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 87 },
-    { name: 'Ethan Wong', position: 'DF', number: 5, goals: 1, assists: 0, apps: 12, yellow_cards: 4, red_cards: 1, clean_sheets: 0, rating: 71 },
-    { name: 'Victor Alden', position: 'GK', number: 1, goals: 0, assists: 0, apps: 14, yellow_cards: 0, red_cards: 0, clean_sheets: 5, rating: 74 },
-    { name: 'Omar Siddiqui', position: 'DF', number: 2, goals: 0, assists: 1, apps: 13, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 69 },
-    { name: 'Derek Lin', position: 'DF', number: 3, goals: 1, assists: 0, apps: 12, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 68 },
-    { name: 'Pavel Novak', position: 'DF', number: 4, goals: 0, assists: 0, apps: 11, yellow_cards: 3, red_cards: 0, clean_sheets: 0, rating: 65 },
-    { name: 'Julian Cho', position: 'MF', number: 6, goals: 2, assists: 4, apps: 14, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 77 },
-    { name: 'Marco Silva', position: 'MF', number: 10, goals: 3, assists: 2, apps: 13, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 76 },
-    { name: 'Tomas Reyes', position: 'FW', number: 7, goals: 5, assists: 2, apps: 13, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 78 },
-    { name: 'Kwame Asante', position: 'FW', number: 9, goals: 3, assists: 1, apps: 10, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 71 },
-  ],
-  'Manhattan Strikers FC': [
-    { name: 'Diego Fernandez', position: 'FW', number: 7, goals: 8, assists: 3, apps: 13, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 82 },
-    { name: 'Malik Johnson', position: 'MF', number: 6, goals: 2, assists: 6, apps: 14, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 79 },
-    { name: 'Owen Sullivan', position: 'GK', number: 1, goals: 0, assists: 2, apps: 14, yellow_cards: 0, red_cards: 0, clean_sheets: 6, rating: 76 },
-    { name: 'Hassan Idris', position: 'DF', number: 2, goals: 0, assists: 1, apps: 13, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 70 },
-    { name: 'Ben Whitfield', position: 'DF', number: 3, goals: 1, assists: 0, apps: 12, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 68 },
-    { name: 'Luca Moretti', position: 'DF', number: 4, goals: 0, assists: 0, apps: 14, yellow_cards: 3, red_cards: 1, clean_sheets: 0, rating: 67 },
-    { name: 'Andre Kowalski', position: 'DF', number: 5, goals: 0, assists: 1, apps: 11, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 66 },
-    { name: 'Isaac Novak', position: 'MF', number: 8, goals: 2, assists: 3, apps: 13, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 75 },
-    { name: 'Theo Marsh', position: 'MF', number: 10, goals: 1, assists: 4, apps: 12, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 74 },
-    { name: 'Rafael Costa', position: 'FW', number: 9, goals: 6, assists: 2, apps: 14, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 80 },
-    { name: 'Deshawn Miller', position: 'FW', number: 11, goals: 3, assists: 1, apps: 10, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 72 },
-  ],
-  'Bronx Rovers FC': [
-    { name: 'Carlos Mendoza', position: 'FW', number: 9, goals: 7, assists: 1, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 81 },
-    { name: 'Tyrell Brooks', position: 'MF', number: 10, goals: 4, assists: 8, apps: 14, yellow_cards: 3, red_cards: 0, clean_sheets: 0, rating: 83 },
-    { name: 'Nico Russo', position: 'DF', number: 3, goals: 1, assists: 0, apps: 12, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 70 },
-    { name: 'Patrick Doyle', position: 'GK', number: 1, goals: 0, assists: 0, apps: 13, yellow_cards: 0, red_cards: 0, clean_sheets: 4, rating: 73 },
-    { name: 'Emeka Obi', position: 'DF', number: 2, goals: 0, assists: 0, apps: 12, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 67 },
-    { name: 'Sean Farrell', position: 'DF', number: 4, goals: 1, assists: 0, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 69 },
-    { name: 'Jorge Aguilar', position: 'DF', number: 5, goals: 0, assists: 1, apps: 11, yellow_cards: 2, red_cards: 0, clean_sheets: 0, rating: 66 },
-    { name: 'Wesley Chan', position: 'MF', number: 6, goals: 2, assists: 2, apps: 13, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 73 },
-    { name: 'Nate Fitzgerald', position: 'MF', number: 8, goals: 1, assists: 3, apps: 12, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 72 },
-    { name: 'Bryan Cole', position: 'FW', number: 7, goals: 4, assists: 1, apps: 11, yellow_cards: 1, red_cards: 0, clean_sheets: 0, rating: 75 },
-    { name: 'Ismael Diallo', position: 'FW', number: 11, goals: 2, assists: 0, apps: 9, yellow_cards: 0, red_cards: 0, clean_sheets: 0, rating: 68 },
-  ],
-};
-
-const { count: playerCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM players')
-  .get();
-
-if (playerCount === 0) {
-  const insertPlayer = db.prepare(
-    `INSERT INTO players
-      (name, team_id, goals, assists, position, number, apps, yellow_cards, red_cards, clean_sheets, rating)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  );
-
-  for (const [teamName, players] of Object.entries(playersByTeam)) {
-    const teamId = teamIdByName[teamName];
-    for (const player of players) {
-      insertPlayer.run(
-        player.name,
-        teamId,
-        player.goals,
-        player.assists,
-        player.position,
-        player.number,
-        player.apps,
-        player.yellow_cards,
-        player.red_cards,
-        player.clean_sheets,
-        player.rating
-      );
-    }
-  }
-
-  console.log('Seeded players table.');
-} else {
-  console.log('Players table already has data, skipping.');
-}
-
-const playerIdByName = Object.fromEntries(
-  db
-    .prepare('SELECT id, name FROM players')
-    .all()
-    .map((row) => [row.name, row.id])
-);
-
-// Starting XIs reused across matches for the same team (no substitutes modeled yet).
-const brooklynXI = [
-  { name: 'Elijah Ward', number: 1, pos: 'GK' },
-  { name: 'Sam Rutherford', number: 2, pos: 'DF' },
-  { name: 'Miguel Torres', number: 3, pos: 'DF' },
-  { name: 'Devon Clarke', number: 4, pos: 'DF' },
-  { name: 'Andre Blake', number: 5, pos: 'DF' },
-  { name: 'Chris Duval', number: 6, pos: 'MF' },
-  { name: 'Leo Faison', number: 7, pos: 'FW' },
-  { name: 'Noah Kim', number: 8, pos: 'MF' },
-  { name: 'Jalen Osei', number: 9, pos: 'FW' },
-  { name: 'Marcus Reyes', number: 10, pos: 'MF' },
-  { name: 'Adrian Souza', number: 11, pos: 'FW' },
-];
-const queensXI = [
-  { name: 'Victor Alden', number: 1, pos: 'GK' },
-  { name: 'Omar Siddiqui', number: 2, pos: 'DF' },
-  { name: 'Derek Lin', number: 3, pos: 'DF' },
-  { name: 'Pavel Novak', number: 4, pos: 'DF' },
-  { name: 'Ethan Wong', number: 5, pos: 'DF' },
-  { name: 'Julian Cho', number: 6, pos: 'MF' },
-  { name: 'Tomas Reyes', number: 7, pos: 'FW' },
-  { name: 'Ravi Patel', number: 8, pos: 'MF' },
-  { name: 'Kwame Asante', number: 9, pos: 'FW' },
-  { name: 'Marco Silva', number: 10, pos: 'MF' },
-  { name: 'Yusuf Demir', number: 11, pos: 'FW' },
-];
-const manhattanXI = [
-  { name: 'Owen Sullivan', number: 1, pos: 'GK' },
-  { name: 'Hassan Idris', number: 2, pos: 'DF' },
-  { name: 'Ben Whitfield', number: 3, pos: 'DF' },
-  { name: 'Luca Moretti', number: 4, pos: 'DF' },
-  { name: 'Andre Kowalski', number: 5, pos: 'DF' },
-  { name: 'Malik Johnson', number: 6, pos: 'MF' },
-  { name: 'Diego Fernandez', number: 7, pos: 'FW' },
-  { name: 'Isaac Novak', number: 8, pos: 'MF' },
-  { name: 'Rafael Costa', number: 9, pos: 'FW' },
-  { name: 'Theo Marsh', number: 10, pos: 'MF' },
-  { name: 'Deshawn Miller', number: 11, pos: 'FW' },
-];
-const bronxXI = [
-  { name: 'Patrick Doyle', number: 1, pos: 'GK' },
-  { name: 'Emeka Obi', number: 2, pos: 'DF' },
-  { name: 'Nico Russo', number: 3, pos: 'DF' },
-  { name: 'Sean Farrell', number: 4, pos: 'DF' },
-  { name: 'Jorge Aguilar', number: 5, pos: 'DF' },
-  { name: 'Wesley Chan', number: 6, pos: 'MF' },
-  { name: 'Bryan Cole', number: 7, pos: 'FW' },
-  { name: 'Nate Fitzgerald', number: 8, pos: 'MF' },
-  { name: 'Carlos Mendoza', number: 9, pos: 'FW' },
-  { name: 'Tyrell Brooks', number: 10, pos: 'MF' },
-  { name: 'Ismael Diallo', number: 11, pos: 'FW' },
+// Real 26-27 Brooklyn Division schedule (scraped from LeagueLobster) — 22 rounds,
+// 110 fixtures, all unplayed. No rosters exist yet for these teams, so matches
+// carry no lineups/events/clips/MOTM data until real results come in.
+const brooklynMatches = [
+  { home: 'Valor FC', away: 'Viper FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-08-22T12:00:00', round: 1 },
+  { home: 'Vaux FC', away: 'Stuy FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-08-22T13:30:00', round: 1 },
+  { home: 'Black Wolves FC', away: 'Apex United FC', venue: 'Highland Park', kickoffAt: '2026-08-22T14:00:00', round: 1 },
+  { home: 'Inter Bushwick FC', away: 'Hikmah FC', venue: 'Mafera Park', kickoffAt: '2026-08-22T14:00:00', round: 1 },
+  { home: 'Marine FC', away: 'Gugo FC', venue: 'Bill Brown Playground', kickoffAt: '2026-08-22T14:00:00', round: 1 },
+  { home: 'Apex United FC', away: 'Valor FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-09-05T12:00:00', round: 2 },
+  { home: 'Gugo FC', away: 'Vaux FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-09-05T14:00:00', round: 2 },
+  { home: 'Marine FC', away: 'Inter Bushwick FC', venue: 'Bill Brown Playground', kickoffAt: '2026-09-05T14:00:00', round: 2 },
+  { home: 'Stuy FC', away: 'FC Mosaico', venue: 'Caton Parade Grounds', kickoffAt: '2026-09-05T15:30:00', round: 2 },
+  { home: 'Hikmah FC', away: 'Black Wolves FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-09-06T14:00:00', round: 2 },
+  { home: 'Valor FC', away: 'Hikmah FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-09-12T12:00:00', round: 3 },
+  { home: 'FC Mosaico', away: 'Gugo FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-09-12T13:30:00', round: 3 },
+  { home: 'Black Wolves FC', away: 'Marine FC', venue: 'Highland Park', kickoffAt: '2026-09-12T14:00:00', round: 3 },
+  { home: 'Inter Bushwick FC', away: 'Vaux FC', venue: 'Mafera Park', kickoffAt: '2026-09-12T14:00:00', round: 3 },
+  { home: 'Viper FC', away: 'Apex United FC', venue: 'Pal’s Oval', kickoffAt: '2026-09-12T14:00:00', round: 3 },
+  { home: 'FC Mosaico', away: 'Inter Bushwick FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-09-26T12:00:00', round: 4 },
+  { home: 'Vaux FC', away: 'Black Wolves FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-09-26T13:30:00', round: 4 },
+  { home: 'Hikmah FC', away: 'Viper FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-09-26T14:00:00', round: 4 },
+  { home: 'Marine FC', away: 'Valor FC', venue: 'Bill Brown Playground', kickoffAt: '2026-09-26T14:00:00', round: 4 },
+  { home: 'Gugo FC', away: 'Stuy FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-09-26T15:30:00', round: 4 },
+  { home: 'Apex United FC', away: 'Hikmah FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-10T12:00:00', round: 5 },
+  { home: 'Valor FC', away: 'Vaux FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-10T13:30:00', round: 5 },
+  { home: 'Black Wolves FC', away: 'FC Mosaico', venue: 'Highland Park', kickoffAt: '2026-10-10T14:00:00', round: 5 },
+  { home: 'Inter Bushwick FC', away: 'Stuy FC', venue: 'Mafera Park', kickoffAt: '2026-10-10T14:00:00', round: 5 },
+  { home: 'Viper FC', away: 'Marine FC', venue: 'Pal’s Oval', kickoffAt: '2026-10-10T14:00:00', round: 5 },
+  { home: 'FC Mosaico', away: 'Valor FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-17T12:00:00', round: 6 },
+  { home: 'Vaux FC', away: 'Viper FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-17T13:30:00', round: 6 },
+  { home: 'Stuy FC', away: 'Black Wolves FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-10-17T14:00:00', round: 6 },
+  { home: 'Marine FC', away: 'Apex United FC', venue: 'Bill Brown Playground', kickoffAt: '2026-10-17T14:00:00', round: 6 },
+  { home: 'Gugo FC', away: 'Inter Bushwick FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-10-17T15:30:00', round: 6 },
+  { home: 'Valor FC', away: 'Stuy FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-31T12:00:00', round: 7 },
+  { home: 'Apex United FC', away: 'Vaux FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-10-31T13:30:00', round: 7 },
+  { home: 'Hikmah FC', away: 'Marine FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-10-31T14:00:00', round: 7 },
+  { home: 'Black Wolves FC', away: 'Gugo FC', venue: 'Highland Park', kickoffAt: '2026-10-31T14:00:00', round: 7 },
+  { home: 'Viper FC', away: 'FC Mosaico', venue: 'Pal’s Oval', kickoffAt: '2026-10-31T14:00:00', round: 7 },
+  { home: 'Vaux FC', away: 'Hikmah FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-11-14T12:00:00', round: 8 },
+  { home: 'FC Mosaico', away: 'Apex United FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-11-14T13:30:00', round: 8 },
+  { home: 'Stuy FC', away: 'Viper FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-11-14T14:00:00', round: 8 },
+  { home: 'Inter Bushwick FC', away: 'Black Wolves FC', venue: 'Mafera Park', kickoffAt: '2026-11-14T14:00:00', round: 8 },
+  { home: 'Gugo FC', away: 'Valor FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-11-14T15:30:00', round: 8 },
+  { home: 'Valor FC', away: 'Inter Bushwick FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-12-05T12:00:00', round: 9 },
+  { home: 'Apex United FC', away: 'Stuy FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-12-05T13:30:00', round: 9 },
+  { home: 'Hikmah FC', away: 'FC Mosaico', venue: 'Caton Parade Grounds', kickoffAt: '2026-12-05T14:00:00', round: 9 },
+  { home: 'Marine FC', away: 'Vaux FC', venue: 'Bill Brown Playground', kickoffAt: '2026-12-05T14:00:00', round: 9 },
+  { home: 'Viper FC', away: 'Gugo FC', venue: 'Pal’s Oval', kickoffAt: '2026-12-05T14:00:00', round: 9 },
+  { home: 'FC Mosaico', away: 'Marine FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-12-12T12:00:00', round: 10 },
+  { home: 'Stuy FC', away: 'Hikmah FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-12-12T14:00:00', round: 10 },
+  { home: 'Black Wolves FC', away: 'Valor FC', venue: 'Highland Park', kickoffAt: '2026-12-12T14:00:00', round: 10 },
+  { home: 'Inter Bushwick FC', away: 'Viper FC', venue: 'Mafera Park', kickoffAt: '2026-12-12T14:00:00', round: 10 },
+  { home: 'Gugo FC', away: 'Apex United FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-12-12T15:30:00', round: 10 },
+  { home: 'Apex United FC', away: 'Inter Bushwick FC', venue: 'Calvert Vaux Park', kickoffAt: '2026-12-19T12:00:00', round: 11 },
+  { home: 'Vaux FC', away: 'FC Mosaico', venue: 'Calvert Vaux Park', kickoffAt: '2026-12-19T13:30:00', round: 11 },
+  { home: 'Hikmah FC', away: 'Gugo FC', venue: 'Caton Parade Grounds', kickoffAt: '2026-12-19T14:00:00', round: 11 },
+  { home: 'Marine FC', away: 'Stuy FC', venue: 'Bill Brown Playground', kickoffAt: '2026-12-19T14:00:00', round: 11 },
+  { home: 'Viper FC', away: 'Black Wolves FC', venue: 'Pal’s Oval', kickoffAt: '2026-12-19T14:00:00', round: 11 },
+  { home: 'Apex United FC', away: 'Black Wolves FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-06T12:00:00', round: 12 },
+  { home: 'Hikmah FC', away: 'Inter Bushwick FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-03-06T14:00:00', round: 12 },
+  { home: 'Viper FC', away: 'Valor FC', venue: 'Pal’s Oval', kickoffAt: '2027-03-06T14:00:00', round: 12 },
+  { home: 'Gugo FC', away: 'Marine FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-03-06T15:30:00', round: 12 },
+  { home: 'Stuy FC', away: 'Vaux FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-03-07T14:00:00', round: 12 },
+  { home: 'Valor FC', away: 'Apex United FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-20T12:00:00', round: 13 },
+  { home: 'Vaux FC', away: 'Gugo FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-20T13:30:00', round: 13 },
+  { home: 'Black Wolves FC', away: 'Hikmah FC', venue: 'Highland Park', kickoffAt: '2027-03-20T14:00:00', round: 13 },
+  { home: 'Inter Bushwick FC', away: 'Marine FC', venue: 'Mafera Park', kickoffAt: '2027-03-20T14:00:00', round: 13 },
+  { home: 'FC Mosaico', away: 'Stuy FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-20T15:00:00', round: 13 },
+  { home: 'Apex United FC', away: 'Viper FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-27T12:00:00', round: 14 },
+  { home: 'Vaux FC', away: 'Inter Bushwick FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-03-27T13:30:00', round: 14 },
+  { home: 'Gugo FC', away: 'FC Mosaico', venue: 'Caton Parade Grounds', kickoffAt: '2027-03-27T14:00:00', round: 14 },
+  { home: 'Marine FC', away: 'Black Wolves FC', venue: 'Bill Brown Playground', kickoffAt: '2027-03-27T14:00:00', round: 14 },
+  { home: 'Hikmah FC', away: 'Valor FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-03-27T15:30:00', round: 14 },
+  { home: 'Valor FC', away: 'Marine FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-04-10T12:00:00', round: 15 },
+  { home: 'Stuy FC', away: 'Gugo FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-04-10T14:00:00', round: 15 },
+  { home: 'Black Wolves FC', away: 'Vaux FC', venue: 'Highland Park', kickoffAt: '2027-04-10T14:00:00', round: 15 },
+  { home: 'Inter Bushwick FC', away: 'FC Mosaico', venue: 'Mafera Park', kickoffAt: '2027-04-10T14:00:00', round: 15 },
+  { home: 'Viper FC', away: 'Hikmah FC', venue: 'Pal’s Oval', kickoffAt: '2027-04-10T14:00:00', round: 15 },
+  { home: 'FC Mosaico', away: 'Black Wolves FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-04-17T12:00:00', round: 16 },
+  { home: 'Vaux FC', away: 'Valor FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-04-17T13:30:00', round: 16 },
+  { home: 'Hikmah FC', away: 'Apex United FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-04-17T14:00:00', round: 16 },
+  { home: 'Marine FC', away: 'Viper FC', venue: 'Bill Brown Playground', kickoffAt: '2027-04-17T14:00:00', round: 16 },
+  { home: 'Stuy FC', away: 'Inter Bushwick FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-04-17T15:30:00', round: 16 },
+  { home: 'Valor FC', away: 'FC Mosaico', venue: 'Calvert Vaux Park', kickoffAt: '2027-04-24T12:00:00', round: 17 },
+  { home: 'Apex United FC', away: 'Marine FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-04-24T13:30:00', round: 17 },
+  { home: 'Black Wolves FC', away: 'Stuy FC', venue: 'Highland Park', kickoffAt: '2027-04-24T14:00:00', round: 17 },
+  { home: 'Inter Bushwick FC', away: 'Gugo FC', venue: 'Mafera Park', kickoffAt: '2027-04-24T14:00:00', round: 17 },
+  { home: 'Viper FC', away: 'Vaux FC', venue: 'Pal’s Oval', kickoffAt: '2027-04-24T14:00:00', round: 17 },
+  { home: 'Vaux FC', away: 'Apex United FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-01T12:00:00', round: 18 },
+  { home: 'FC Mosaico', away: 'Viper FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-01T13:30:00', round: 18 },
+  { home: 'Stuy FC', away: 'Valor FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-01T14:00:00', round: 18 },
+  { home: 'Marine FC', away: 'Hikmah FC', venue: 'Bill Brown Playground', kickoffAt: '2027-05-01T14:00:00', round: 18 },
+  { home: 'Gugo FC', away: 'Black Wolves FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-01T15:30:00', round: 18 },
+  { home: 'Apex United FC', away: 'FC Mosaico', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-08T12:00:00', round: 19 },
+  { home: 'Valor FC', away: 'Gugo FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-08T13:30:00', round: 19 },
+  { home: 'Hikmah FC', away: 'Vaux FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-08T14:00:00', round: 19 },
+  { home: 'Black Wolves FC', away: 'Inter Bushwick FC', venue: 'Highland Park', kickoffAt: '2027-05-08T14:00:00', round: 19 },
+  { home: 'Viper FC', away: 'Stuy FC', venue: 'Pal’s Oval', kickoffAt: '2027-05-08T14:00:00', round: 19 },
+  { home: 'FC Mosaico', away: 'Hikmah FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-15T12:00:00', round: 20 },
+  { home: 'Vaux FC', away: 'Marine FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-15T13:30:00', round: 20 },
+  { home: 'Stuy FC', away: 'Apex United FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-15T14:00:00', round: 20 },
+  { home: 'Inter Bushwick FC', away: 'Valor FC', venue: 'Mafera Park', kickoffAt: '2027-05-15T14:00:00', round: 20 },
+  { home: 'Gugo FC', away: 'Viper FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-15T15:30:00', round: 20 },
+  { home: 'Valor FC', away: 'Black Wolves FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-22T12:00:00', round: 21 },
+  { home: 'Apex United FC', away: 'Gugo FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-22T13:30:00', round: 21 },
+  { home: 'Hikmah FC', away: 'Stuy FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-22T14:00:00', round: 21 },
+  { home: 'Marine FC', away: 'FC Mosaico', venue: 'Bill Brown Playground', kickoffAt: '2027-05-22T14:00:00', round: 21 },
+  { home: 'Viper FC', away: 'Inter Bushwick FC', venue: 'Pal’s Oval', kickoffAt: '2027-05-22T14:00:00', round: 21 },
+  { home: 'FC Mosaico', away: 'Vaux FC', venue: 'Calvert Vaux Park', kickoffAt: '2027-05-29T12:00:00', round: 22 },
+  { home: 'Stuy FC', away: 'Marine FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-29T14:00:00', round: 22 },
+  { home: 'Black Wolves FC', away: 'Viper FC', venue: 'Highland Park', kickoffAt: '2027-05-29T14:00:00', round: 22 },
+  { home: 'Inter Bushwick FC', away: 'Apex United FC', venue: 'Mafera Park', kickoffAt: '2027-05-29T14:00:00', round: 22 },
+  { home: 'Gugo FC', away: 'Hikmah FC', venue: 'Caton Parade Grounds', kickoffAt: '2027-05-29T15:30:00', round: 22 },
 ];
 
-const matches = [
-  {
-    home: 'Brooklyn Kickers FC',
-    away: 'Queens United SC',
-    homeScore: 3,
-    awayScore: 1,
-    status: 'ft',
-    division: 'queens',
-    competition: 'Queens Division',
-    venue: 'Prospect Park Field 3',
-    kickoffAt: '2026-07-13T15:00:00',
-    homeFormation: '4-3-3',
-    awayFormation: '4-3-3',
-    lineup: { home: brooklynXI, away: queensXI },
-    events: [
-      { minute: 8, type: 'goal', side: 'home', player: 'Marcus Reyes', detail: 'Low finish from the edge of the box.' },
-      { minute: 8, type: 'assist', side: 'home', player: 'Jalen Osei', detail: 'Squared it across the box for Reyes.' },
-      { minute: 23, type: 'yellow', side: 'away', player: 'Ethan Wong', detail: 'Booked for a professional foul.' },
-      { minute: 37, type: 'goal', side: 'away', player: 'Yusuf Demir', detail: 'Driven strike from 18 yards.' },
-      { minute: 37, type: 'assist', side: 'away', player: 'Marco Silva', detail: 'Slipped the through ball for Demir.' },
-      { minute: 55, type: 'goal', side: 'home', player: 'Jalen Osei', detail: 'Tap-in from a rebound.' },
-      { minute: 55, type: 'assist', side: 'home', player: 'Marcus Reyes', detail: "Reyes's shot rebounded to Osei." },
-      { minute: 78, type: 'goal', side: 'home', player: 'Marcus Reyes', detail: 'Second of the night — curled effort into the top corner.' },
-      { minute: 78, type: 'assist', side: 'home', player: 'Chris Duval', detail: 'Played Reyes in behind the back line.' },
-      { minute: 84, type: 'yellow', side: 'home', player: 'Devon Clarke', detail: 'Booked for time-wasting.' },
-    ],
-    clips: [
-      { minute: 8, title: 'Reyes opens the scoring', views: 1200, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 95 },
-      { minute: 37, title: 'Demir levels it', views: 540, tag: 'GOAL', side: 'away' },
-      { minute: 78, title: 'Reyes doubles the lead', views: 1600, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 210 },
-    ],
-    motm: [
-      { player: 'Marcus Reyes', blurb: '2 goals' },
-      { player: 'Jalen Osei', blurb: '1 goal' },
-      { player: 'Yusuf Demir', blurb: '1 goal' },
-      { player: 'Devon Clarke', blurb: 'Defensive lock-down, 1 booking' },
-    ],
-  },
-  {
-    home: 'Manhattan Strikers FC',
-    away: 'Bronx Rovers FC',
-    homeScore: 2,
-    awayScore: 2,
-    status: 'ft',
-    division: 'bronx',
-    competition: 'Bronx Division',
-    venue: 'Van Cortlandt Park Field 1',
-    kickoffAt: '2026-07-13T17:00:00',
-    homeFormation: '4-3-3',
-    awayFormation: '4-3-3',
-    lineup: { home: manhattanXI, away: bronxXI },
-    events: [
-      { minute: 15, type: 'goal', side: 'home', player: 'Diego Fernandez', detail: 'Volleyed home from a corner.' },
-      { minute: 15, type: 'assist', side: 'home', player: 'Theo Marsh', detail: 'Whipped in the corner for Fernandez.' },
-      { minute: 29, type: 'goal', side: 'away', player: 'Carlos Mendoza', detail: 'Composed finish after a quick counter.' },
-      { minute: 29, type: 'assist', side: 'away', player: 'Tyrell Brooks', detail: 'Sprung the counter with a through ball.' },
-      { minute: 61, type: 'goal', side: 'home', player: 'Malik Johnson', detail: 'Long-range effort into the bottom corner.' },
-      { minute: 73, type: 'yellow', side: 'away', player: 'Tyrell Brooks', detail: 'Booked for a late tackle.' },
-      { minute: 88, type: 'goal', side: 'away', player: 'Carlos Mendoza', detail: 'Equalizer — second of the match, header from a corner.' },
-      { minute: 88, type: 'assist', side: 'away', player: 'Wesley Chan', detail: 'Delivered the corner for the equalizer.' },
-    ],
-    clips: [
-      { minute: 88, title: "Mendoza's late equalizer", views: 690, tag: 'GOAL', side: 'away', gotw: true, gotwVotes: 75 },
-    ],
-    motm: [
-      { player: 'Carlos Mendoza', blurb: '2 goals' },
-      { player: 'Diego Fernandez', blurb: '1 goal' },
-      { player: 'Malik Johnson', blurb: '1 goal, long range' },
-      { player: 'Owen Sullivan', blurb: 'Goalkeeper, key saves throughout' },
-    ],
-  },
-  {
-    home: 'Queens United SC',
-    away: 'Manhattan Strikers FC',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'upcoming',
-    division: 'cross',
-    competition: 'Interborough Friendly',
-    venue: 'Astoria Park Field 2',
-    kickoffAt: '2026-07-27T10:00:00',
-  },
-  {
-    home: 'Bronx Rovers FC',
-    away: 'Brooklyn Kickers FC',
-    homeScore: 0,
-    awayScore: 0,
-    status: 'upcoming',
-    division: 'cross',
-    competition: 'Interborough Friendly',
-    venue: 'Pelham Bay Park Field 2',
-    kickoffAt: '2026-07-27T12:30:00',
-  },
-  {
-    home: 'Queens United SC',
-    away: 'Brooklyn Kickers FC',
-    homeScore: 1,
-    awayScore: 1,
-    status: 'live',
-    division: 'queens',
-    competition: 'Queens Division',
-    venue: 'Flushing Meadows Pitch B',
-    kickoffAt: '2026-07-20T16:00:00',
-    homeFormation: '4-3-3',
-    awayFormation: '4-3-3',
-    lineup: { home: queensXI, away: brooklynXI },
-    events: [
-      { minute: 19, type: 'goal', side: 'home', player: 'Yusuf Demir', detail: 'First-time finish from a through ball.' },
-      { minute: 19, type: 'assist', side: 'home', player: 'Ravi Patel', detail: 'Threaded the through ball for Demir.' },
-      { minute: 44, type: 'goal', side: 'away', player: 'Marcus Reyes', detail: 'Equalizer just before half-time — a curling free kick.' },
-    ],
-    clips: [
-      { minute: 19, title: "Demir's first-time finish", views: 980, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 140 },
-    ],
-  },
-];
+const matches = brooklynMatches.map((m) => ({
+  home: m.home,
+  away: m.away,
+  homeScore: 0,
+  awayScore: 0,
+  status: 'upcoming',
+  division: 'brooklyn',
+  competition: 'Brooklyn Division',
+  venue: m.venue,
+  kickoffAt: m.kickoffAt,
+}));
 
 function matchKeyFor(match) {
   return `${teamIdByName[match.home]}|${teamIdByName[match.away]}|${match.kickoffAt}`;
@@ -338,8 +205,8 @@ const { count: matchCount } = db
 if (matchCount === 0) {
   const insertMatch = db.prepare(
     `INSERT INTO matches
-      (home_team_id, away_team_id, home_score, away_score, status, division, competition, venue, kickoff_at, home_formation, away_formation)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (home_team_id, away_team_id, home_score, away_score, status, division, competition, venue, kickoff_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (const match of matches) {
@@ -352,9 +219,7 @@ if (matchCount === 0) {
       match.division,
       match.competition,
       match.venue,
-      match.kickoffAt,
-      match.homeFormation ?? null,
-      match.awayFormation ?? null
+      match.kickoffAt
     );
   }
 
@@ -370,169 +235,9 @@ for (const row of db
   matchIdByKey[`${row.home_team_id}|${row.away_team_id}|${row.kickoff_at}`] = row.id;
 }
 
-const { count: eventCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM match_events')
-  .get();
-
-if (eventCount === 0) {
-  const insertEvent = db.prepare(
-    `INSERT INTO match_events (match_id, minute, type, team_id, player_name, detail)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  );
-
-  for (const match of matches) {
-    if (!match.events) continue;
-    const matchId = matchIdByKey[matchKeyFor(match)];
-    for (const ev of match.events) {
-      const teamId = ev.side === 'home' ? teamIdByName[match.home] : teamIdByName[match.away];
-      insertEvent.run(matchId, ev.minute, ev.type, teamId, ev.player, ev.detail);
-    }
-  }
-
-  console.log('Seeded match_events table.');
-} else {
-  console.log('match_events table already has data, skipping.');
+function coachSlug(name) {
+  return name.replace(/\bFC\b|\bSC\b/g, '').replace(/[^a-zA-Z]/g, '').toLowerCase();
 }
-
-const { count: lineupCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM match_lineups')
-  .get();
-
-if (lineupCount === 0) {
-  const insertLineup = db.prepare(
-    `INSERT INTO match_lineups (match_id, team_id, player_id, num, pos, is_starting)
-     VALUES (?, ?, ?, ?, ?, 1)`
-  );
-
-  for (const match of matches) {
-    if (!match.lineup) continue;
-    const matchId = matchIdByKey[matchKeyFor(match)];
-    const homeTeamId = teamIdByName[match.home];
-    const awayTeamId = teamIdByName[match.away];
-
-    for (const p of match.lineup.home) {
-      insertLineup.run(matchId, homeTeamId, playerIdByName[p.name], p.number, p.pos);
-    }
-    for (const p of match.lineup.away) {
-      insertLineup.run(matchId, awayTeamId, playerIdByName[p.name], p.number, p.pos);
-    }
-  }
-
-  console.log('Seeded match_lineups table.');
-} else {
-  console.log('match_lineups table already has data, skipping.');
-}
-
-const { count: clipCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM match_clips')
-  .get();
-
-if (clipCount === 0) {
-  const insertClip = db.prepare(
-    `INSERT INTO match_clips (match_id, minute, title, views_count, tag, team_id, is_gotw_candidate, gotw_votes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  );
-
-  for (const match of matches) {
-    if (!match.clips) continue;
-    const matchId = matchIdByKey[matchKeyFor(match)];
-    for (const clip of match.clips) {
-      const teamId = clip.side === 'home' ? teamIdByName[match.home] : teamIdByName[match.away];
-      insertClip.run(
-        matchId,
-        clip.minute,
-        clip.title,
-        clip.views,
-        clip.tag,
-        teamId,
-        clip.gotw ? 1 : 0,
-        clip.gotwVotes ?? 0
-      );
-    }
-  }
-
-  console.log('Seeded match_clips table.');
-} else {
-  console.log('match_clips table already has data, skipping.');
-}
-
-const { count: motmCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM motm_candidates')
-  .get();
-
-if (motmCount === 0) {
-  const insertMotm = db.prepare(
-    `INSERT INTO motm_candidates (match_id, player_id, blurb, votes)
-     VALUES (?, ?, ?, 0)`
-  );
-
-  for (const match of matches) {
-    if (!match.motm) continue;
-    const matchId = matchIdByKey[matchKeyFor(match)];
-    for (const cand of match.motm) {
-      insertMotm.run(matchId, playerIdByName[cand.player], cand.blurb);
-    }
-  }
-
-  console.log('Seeded motm_candidates table.');
-} else {
-  console.log('motm_candidates table already has data, skipping.');
-}
-
-// Shortlist hand-picked from this week's top goal+assist contributors (see match events above).
-const potwShortlist = [
-  { player: 'Marcus Reyes', votes: 145 },
-  { player: 'Yusuf Demir', votes: 98 },
-  { player: 'Carlos Mendoza', votes: 61 },
-  { player: 'Jalen Osei', votes: 40 },
-];
-
-const { count: potwCount } = db.prepare('SELECT COUNT(*) AS count FROM potw_candidates').get();
-
-if (potwCount === 0) {
-  const insertPotw = db.prepare(
-    'INSERT INTO potw_candidates (player_id, votes) VALUES (?, ?)'
-  );
-  for (const cand of potwShortlist) {
-    insertPotw.run(playerIdByName[cand.player], cand.votes);
-  }
-  console.log('Seeded potw_candidates table.');
-} else {
-  console.log('potw_candidates table already has data, skipping.');
-}
-
-const totwRoster = [
-  'Elijah Ward',
-  'Sam Rutherford',
-  'Devon Clarke',
-  'Hassan Idris',
-  'Andre Blake',
-  'Chris Duval',
-  'Marcus Reyes',
-  'Ravi Patel',
-  'Yusuf Demir',
-  'Jalen Osei',
-  'Carlos Mendoza',
-];
-
-const { count: totwCount } = db.prepare('SELECT COUNT(*) AS count FROM totw_picks').get();
-
-if (totwCount === 0) {
-  const insertTotw = db.prepare('INSERT INTO totw_picks (player_id) VALUES (?)');
-  for (const name of totwRoster) {
-    insertTotw.run(playerIdByName[name]);
-  }
-  console.log('Seeded totw_picks table.');
-} else {
-  console.log('totw_picks table already has data, skipping.');
-}
-
-const coachesByTeam = {
-  'Brooklyn Kickers FC': { email: 'coach@brooklynkickers.com', password: 'password123' },
-  'Queens United SC': { email: 'coach@queensunited.com', password: 'password123' },
-  'Manhattan Strikers FC': { email: 'coach@manhattanstrikers.com', password: 'password123' },
-  'Bronx Rovers FC': { email: 'coach@bronxrovers.com', password: 'password123' },
-};
 
 const { count: userCount } = db.prepare('SELECT COUNT(*) AS count FROM users').get();
 
@@ -541,8 +246,9 @@ if (userCount === 0) {
     'INSERT INTO users (email, password_hash, team_id, role) VALUES (?, ?, ?, ?)'
   );
 
-  for (const [teamName, coach] of Object.entries(coachesByTeam)) {
-    insertUser.run(coach.email, hashPassword(coach.password), teamIdByName[teamName], 'coach');
+  for (const team of teams) {
+    const email = `coach@${coachSlug(team.name)}.com`;
+    insertUser.run(email, hashPassword('password123'), teamIdByName[team.name], 'coach');
   }
 
   console.log('Seeded users table.');
@@ -571,34 +277,6 @@ if (refereeCount === 0) {
   console.log('Seeded referees table.');
 } else {
   console.log('Referees table already has data, skipping.');
-}
-
-const refereeIdByName = Object.fromEntries(
-  db
-    .prepare('SELECT id, name FROM referees')
-    .all()
-    .map((row) => [row.name, row.id])
-);
-
-const { count: matchRefereeCount } = db
-  .prepare('SELECT COUNT(*) AS count FROM match_referees')
-  .get();
-
-if (matchRefereeCount === 0) {
-  const insertMatchReferee = db.prepare(
-    'INSERT OR IGNORE INTO match_referees (match_id, referee_id) VALUES (?, ?)'
-  );
-
-  for (const match of matches) {
-    if (!match.events) continue;
-    const matchId = matchIdByKey[matchKeyFor(match)];
-    insertMatchReferee.run(matchId, refereeIdByName['Marcus Alvarado']);
-    insertMatchReferee.run(matchId, refereeIdByName['Carlos Nguyen']);
-  }
-
-  console.log('Seeded match_referees table.');
-} else {
-  console.log('match_referees table already has data, skipping.');
 }
 
 const venues = [
@@ -667,8 +345,8 @@ const venueIdByName = Object.fromEntries(
 );
 
 const friendlyRequests = [
-  { team: 'Manhattan Strikers FC', date: '2026-08-01', time: '11:00 AM', venue: 'Flushing Meadows–Corona Park' },
-  { team: 'Bronx Rovers FC', date: '2026-08-08', time: '9:00 AM', venue: "Randall's Island" },
+  { team: 'Vaux FC', date: '2026-08-01', time: '11:00 AM', venue: 'Flushing Meadows–Corona Park' },
+  { team: 'Marine FC', date: '2026-08-08', time: '9:00 AM', venue: "Randall's Island" },
 ];
 
 const { count: friendlyRequestCount } = db
@@ -716,11 +394,6 @@ if (bulletinCount === 0) {
 } else {
   console.log('Bulletins table already has data, skipping.');
 }
-
-db.prepare(
-  `UPDATE matches SET is_motw = 1
-   WHERE home_team_id = ? AND away_team_id = ? AND kickoff_at = ?`
-).run(teamIdByName['Queens United SC'], teamIdByName['Brooklyn Kickers FC'], '2026-07-20T16:00:00');
 
 for (const teamId of Object.values(teamIdByName)) {
   recalculateTeamPoints(teamId);

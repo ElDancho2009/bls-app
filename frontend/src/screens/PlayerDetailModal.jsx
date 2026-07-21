@@ -4,6 +4,13 @@ function tierClass(rating) {
   return 'tier-bronze';
 }
 
+const POSITION_BADGE = {
+  GK: 'pos-gk',
+  DF: 'pos-def',
+  MF: 'pos-mid',
+  FW: 'pos-fwd',
+};
+
 function statRows(player) {
   if (player.position === 'GK') {
     return [
@@ -43,8 +50,11 @@ export default function PlayerDetailModal({ player, team, onClose, onSelectTeam 
               className="player-modal-meta player-modal-team-link"
               onClick={() => onSelectTeam(player.team_id)}
             >
-              {team?.name} · {player.position} · #{player.number}
+              {team?.name} · #{player.number}
             </button>
+            <span className={`player-position-badge ${POSITION_BADGE[player.position] ?? ''}`}>
+              {player.position}
+            </span>
           </div>
         </div>
 

@@ -4,6 +4,7 @@ import Crest from '../Crest.jsx';
 
 const DIVISIONS = [
   { key: 'all', label: 'All' },
+  { key: 'brooklyn', label: 'Brooklyn' },
   { key: 'queens', label: 'Queens' },
   { key: 'bronx', label: 'Bronx' },
 ];
@@ -112,12 +113,15 @@ export default function MatchesScreen({ onSelectMatch }) {
           const scoreText =
             match.status === 'upcoming' ? '–' : `${match.home_score} - ${match.away_score}`;
 
+          const isLive = match.status === 'live';
+
           return (
             <button
               key={match.id}
-              className={`fixture-row ${match.status === 'live' ? 'fixture-live' : ''}`}
+              className={`fixture-row ${isLive ? 'fixture-live fixture-row-hero' : ''}`}
               onClick={() => onSelectMatch(match.id)}
             >
+              {isLive && <span className="fixture-hero-badge">LIVE</span>}
               <div className="fixture-team">
                 <Crest src={home?.logo_url} />
                 <span>{home?.name}</span>

@@ -7,7 +7,7 @@
   --text: #f3f4f6;
   --text-dim: #9ca3af;
   --text-faint: oklch(0.42 0.012 255);
-  --accent: #eab308;
+  --accent: #facc15;
   --accent-ink: #0b0e14;
   --live: #22c55e;
   --warn: oklch(0.78 0.16 90);
@@ -158,7 +158,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 15px;
   letter-spacing: 0.5px;
@@ -179,18 +179,20 @@ button {
 }
 
 .brand-title {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 27px;
-  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   color: var(--text);
   line-height: 1;
 }
 
 .brand-subtitle {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
   font-size: 13px;
+  text-transform: uppercase;
   letter-spacing: 3px;
   color: var(--accent);
   margin-top: 3px;
@@ -254,7 +256,7 @@ button {
 }
 
 .day-num {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
   font-size: 16px;
 }
@@ -314,7 +316,7 @@ button {
 }
 
 .fixture-score {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 17px;
 }
@@ -338,8 +340,11 @@ button {
 .tab-button {
   flex: 1;
   padding: 10px 0;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
   color: var(--text-faint);
   text-align: center;
   display: flex;
@@ -397,7 +402,7 @@ button {
 }
 
 .mc-score {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 32px;
 }
@@ -527,7 +532,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 13px;
   color: var(--accent-ink);
@@ -589,19 +594,27 @@ button {
 
 .standings-header-row {
   display: grid;
-  grid-template-columns: 24px 1fr 32px 38px 40px;
-  padding: 0 20px 8px;
+  grid-template-columns: 20px 1fr 26px 22px 22px 22px 34px 38px;
+  padding: 0 20px 6px;
   font-weight: 700;
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: 0.5px;
   color: var(--text-faint);
 }
 
+.standings-header-row div {
+  text-align: center;
+}
+
+.standings-header-row div:nth-child(2) {
+  text-align: left;
+}
+
 .standings-row {
   display: grid;
-  grid-template-columns: 24px 1fr 32px 38px 40px;
+  grid-template-columns: 20px 1fr 26px 22px 22px 22px 34px 38px;
   align-items: center;
-  padding: 9px 20px;
+  padding: 6px 20px;
   border-bottom: 1px solid var(--border);
   width: 100%;
   text-align: left;
@@ -646,7 +659,7 @@ button {
 
 .standings-pts {
   text-align: right;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 15px;
 }
@@ -718,8 +731,11 @@ button {
 }
 
 .leaderboard-name {
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -737,7 +753,7 @@ button {
 }
 
 .leaderboard-value-num {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 17px;
   color: var(--accent);
@@ -809,15 +825,18 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 22px;
   flex-shrink: 0;
 }
 
 .player-modal-name {
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .player-modal-meta {
@@ -848,7 +867,7 @@ button {
 }
 
 .player-modal-stat-val {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 20px;
 }
@@ -993,9 +1012,11 @@ button {
 }
 
 .hub-team-name {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .hub-signout {
@@ -1032,7 +1053,7 @@ button {
 }
 
 .dashboard-next-match {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 18px;
 }
@@ -1057,7 +1078,7 @@ button {
 }
 
 .dashboard-stat-val {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 22px;
   color: var(--live);
@@ -1131,7 +1152,7 @@ button {
   cursor: grab;
   background: oklch(0.15 0.012 255 / 88%);
   border: 2px dashed rgba(255, 255, 255, 0.4);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 14px;
 }
@@ -1168,7 +1189,7 @@ button {
 }
 
 .bench-player-num {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 13px;
 }
@@ -1226,8 +1247,11 @@ button {
 }
 
 .squad-name {
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .squad-pos {
@@ -1455,7 +1479,7 @@ button {
 }
 
 .venue-guide-name {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 20px;
   margin-top: 8px;
@@ -1587,7 +1611,7 @@ button {
 }
 
 .motw-vs {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 16px;
   color: var(--text-faint);
@@ -1707,7 +1731,7 @@ button {
 }
 
 .vote-result-pct {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 12px;
   margin-top: 4px;
@@ -1875,7 +1899,7 @@ button {
 }
 
 .totw-player-num {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 14px;
   color: #fff;
@@ -1887,7 +1911,7 @@ button {
   right: -10px;
   background: var(--accent);
   color: var(--accent-ink);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 10.5px;
   padding: 1px 5px;
@@ -1984,7 +2008,7 @@ button {
 }
 
 .ig-story-brand {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 12px;
   color: #fff;
@@ -1993,9 +2017,10 @@ button {
 
 .ig-story-title {
   text-align: center;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 16px;
+  text-transform: uppercase;
   color: var(--accent);
   letter-spacing: 1px;
   margin-top: 2px;
@@ -2018,7 +2043,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 7px;
   color: #fff;
@@ -2070,9 +2095,11 @@ button {
 }
 
 .team-page-name {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 24px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
 .team-page-meta {
@@ -2112,7 +2139,7 @@ button {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 12px;
   color: var(--accent-ink);
@@ -2151,7 +2178,7 @@ button {
 }
 
 .team-page-result-score {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 15px;
   flex-shrink: 0;
@@ -2197,9 +2224,11 @@ button {
 }
 
 .ref-sheet-pin-title {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .ref-sheet-pin-hint {
@@ -2218,7 +2247,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px;
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
   margin-top: 8px;
 }
@@ -2246,9 +2275,11 @@ button {
 }
 
 .ref-sheet-submitted-title {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--accent);
 }
 
@@ -2280,7 +2311,7 @@ button {
 }
 
 .ref-sheet-score {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 20px;
 }
@@ -2303,7 +2334,7 @@ button {
 }
 
 .ref-sheet-minute {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 13px;
   color: var(--accent);
@@ -2412,7 +2443,7 @@ button {
   border-radius: 50%;
   background: oklch(0.26 0.016 255);
   color: var(--text-dim);
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 12px;
   display: flex;
@@ -2441,8 +2472,11 @@ button {
 }
 
 .checkin-name {
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .checkin-pos {
@@ -2541,9 +2575,11 @@ button {
 }
 
 .pitch-sheet-title {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 900;
   font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .pitch-sheet-section-label {
@@ -2571,7 +2607,7 @@ button {
 }
 
 .pitch-sheet-num {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: 'Bebas Neue', sans-serif;
   font-weight: 800;
   font-size: 13px;
   width: 22px;
@@ -2624,4 +2660,110 @@ button {
 .pitch-sheet-share {
   background: var(--accent);
   color: var(--accent-ink);
+}
+
+/* Numeric readouts: fixed-width digits so scorelines and table columns don't shift on update */
+.day-num,
+.fixture-score,
+.mc-score,
+.standings-cell,
+.standings-pts,
+.leaderboard-value-num,
+.player-modal-rating,
+.player-modal-stat-val,
+.dashboard-stat-val,
+.squad-num,
+.motw-stat-value,
+.vote-result-pct,
+.totw-player-rating,
+.team-page-result-score,
+.ref-sheet-score,
+.checkin-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Matches: hero treatment for the live match, compact rows for everything else */
+.fixture-row-hero {
+  padding: 20px 16px;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px -6px var(--accent);
+  position: relative;
+}
+
+.fixture-hero-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.fixture-row-hero .fixture-score {
+  font-size: 22px;
+  color: var(--accent);
+}
+
+/* Standings: rank highlights for league leader and promotion zone */
+.standings-row-lead {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.12), transparent);
+  border-left: 3px solid var(--accent);
+}
+
+.standings-row-lead .standings-rank {
+  color: var(--accent);
+}
+
+.standings-row-promo {
+  border-left: 3px solid var(--live);
+}
+
+/* Player modal: trading-card tier gradients and position badge */
+.player-modal.tier-gold {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.14), var(--bg-panel) 60%);
+}
+
+.player-modal.tier-silver {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), var(--bg-panel) 60%);
+}
+
+.player-modal.tier-bronze {
+  background: linear-gradient(135deg, rgba(176, 138, 90, 0.16), var(--bg-panel) 60%);
+}
+
+.player-position-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  margin-top: 4px;
+}
+
+.player-position-badge.pos-gk {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.player-position-badge.pos-def {
+  background: oklch(0.3 0.03 255);
+  color: var(--text);
+}
+
+.player-position-badge.pos-mid {
+  background: var(--live);
+  color: var(--accent-ink);
+}
+
+.player-position-badge.pos-fwd {
+  background: var(--danger);
+  color: var(--text);
 }
