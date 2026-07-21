@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import MatchesScreen from './screens/MatchesScreen.jsx';
 import MatchCenterScreen from './screens/MatchCenterScreen.jsx';
+import NewsScreen from './screens/NewsScreen.jsx';
 import LeaguesScreen from './screens/LeaguesScreen.jsx';
 import CardsScreen from './screens/CardsScreen.jsx';
+import TeamPageScreen from './screens/TeamPageScreen.jsx';
 import TeamHubScreen from './screens/hub/TeamHubScreen.jsx';
 
 function MatchesIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="8" />
+    </svg>
+  );
+}
+
+function NewsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M5 21V4a1 1 0 0 1 1-1h11l-2 4 2 4H6" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -43,6 +53,7 @@ function HubIcon() {
 
 const TABS = [
   { key: 'matches', label: 'Matches', Icon: MatchesIcon },
+  { key: 'news', label: 'News', Icon: NewsIcon },
   { key: 'leagues', label: 'Leagues', Icon: LeaguesIcon },
   { key: 'stats', label: 'Players', Icon: PlayersIcon },
   { key: 'hub', label: 'Team Hub', Icon: HubIcon },
@@ -50,28 +61,36 @@ const TABS = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('matches');
-  const [selectedMatchId, setSelectedMatchId] = useState(null);
+  const [overlayStack, setOverlayStack] = useState([]);
 
-  const showMatchCenter = activeTab === 'matches' && selectedMatchId != null;
+  const pushMatch = (id) => setOverlayStack((stack) => [...stack, { type: 'match', id }]);
+  const pushTeam = (id) => setOverlayStack((stack) => [...stack, { type: 'team', id }]);
+  const popOverlay = () => setOverlayStack((stack) => stack.slice(0, -1));
+
+  const hasOverlay = overlayStack.length > 0;
 
   return (
     <div className="app-shell">
       <div className="app-content">
-        {activeTab === 'matches' && !showMatchCenter && (
-          <MatchesScreen onSelectMatch={setSelectedMatchId} />
-        )}
+        {!hasOverlay && activeTab === 'matches' && <MatchesScreen onSelectMatch={pushMatch} />}
+        {!hasOverlay && activeTab === 'news' && <NewsScreen onSelectMatch={pushMatch} />}
+        {!hasOverlay && activeTab === 'leagues' && <LeaguesScreen onSelectTeam={pushTeam} />}
+        {!hasOverlay && activeTab === 'stats' && <CardsScreen onSelectTeam={pushTeam} />}
+        {!hasOverlay && activeTab === 'hub' && <TeamHubScreen />}
 
-        {showMatchCenter && (
-          <MatchCenterScreen matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
-        )}
-
-        {activeTab === 'leagues' && <LeaguesScreen />}
-        {activeTab === 'stats' && <CardsScreen />}
-
-        {activeTab === 'hub' && <TeamHubScreen />}
+        {overlayStack.map((entry, i) => (
+          <div key={i} style={{ display: i === overlayStack.length - 1 ? 'block' : 'none' }}>
+            {entry.type === 'match' && (
+              <MatchCenterScreen matchId={entry.id} onClose={popOverlay} onSelectTeam={pushTeam} />
+            )}
+            {entry.type === 'team' && (
+              <TeamPageScreen teamId={entry.id} onClose={popOverlay} onSelectMatch={pushMatch} />
+            )}
+          </div>
+        ))}
       </div>
 
-      {!showMatchCenter && (
+      {!hasOverlay && (
         <nav className="tab-bar">
           {TABS.map((tab) => (
             <button

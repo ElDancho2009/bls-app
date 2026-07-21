@@ -226,15 +226,20 @@ const matches = [
     lineup: { home: brooklynXI, away: queensXI },
     events: [
       { minute: 8, type: 'goal', side: 'home', player: 'Marcus Reyes', detail: 'Low finish from the edge of the box.' },
+      { minute: 8, type: 'assist', side: 'home', player: 'Jalen Osei', detail: 'Squared it across the box for Reyes.' },
       { minute: 23, type: 'yellow', side: 'away', player: 'Ethan Wong', detail: 'Booked for a professional foul.' },
       { minute: 37, type: 'goal', side: 'away', player: 'Yusuf Demir', detail: 'Driven strike from 18 yards.' },
+      { minute: 37, type: 'assist', side: 'away', player: 'Marco Silva', detail: 'Slipped the through ball for Demir.' },
       { minute: 55, type: 'goal', side: 'home', player: 'Jalen Osei', detail: 'Tap-in from a rebound.' },
+      { minute: 55, type: 'assist', side: 'home', player: 'Marcus Reyes', detail: "Reyes's shot rebounded to Osei." },
       { minute: 78, type: 'goal', side: 'home', player: 'Marcus Reyes', detail: 'Second of the night — curled effort into the top corner.' },
+      { minute: 78, type: 'assist', side: 'home', player: 'Chris Duval', detail: 'Played Reyes in behind the back line.' },
       { minute: 84, type: 'yellow', side: 'home', player: 'Devon Clarke', detail: 'Booked for time-wasting.' },
     ],
     clips: [
-      { minute: 8, title: 'Reyes opens the scoring', views: 1200, tag: 'GOAL', side: 'home' },
-      { minute: 78, title: 'Reyes doubles the lead', views: 1600, tag: 'GOAL', side: 'home' },
+      { minute: 8, title: 'Reyes opens the scoring', views: 1200, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 95 },
+      { minute: 37, title: 'Demir levels it', views: 540, tag: 'GOAL', side: 'away' },
+      { minute: 78, title: 'Reyes doubles the lead', views: 1600, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 210 },
     ],
     motm: [
       { player: 'Marcus Reyes', blurb: '2 goals' },
@@ -258,13 +263,16 @@ const matches = [
     lineup: { home: manhattanXI, away: bronxXI },
     events: [
       { minute: 15, type: 'goal', side: 'home', player: 'Diego Fernandez', detail: 'Volleyed home from a corner.' },
+      { minute: 15, type: 'assist', side: 'home', player: 'Theo Marsh', detail: 'Whipped in the corner for Fernandez.' },
       { minute: 29, type: 'goal', side: 'away', player: 'Carlos Mendoza', detail: 'Composed finish after a quick counter.' },
+      { minute: 29, type: 'assist', side: 'away', player: 'Tyrell Brooks', detail: 'Sprung the counter with a through ball.' },
       { minute: 61, type: 'goal', side: 'home', player: 'Malik Johnson', detail: 'Long-range effort into the bottom corner.' },
       { minute: 73, type: 'yellow', side: 'away', player: 'Tyrell Brooks', detail: 'Booked for a late tackle.' },
       { minute: 88, type: 'goal', side: 'away', player: 'Carlos Mendoza', detail: 'Equalizer — second of the match, header from a corner.' },
+      { minute: 88, type: 'assist', side: 'away', player: 'Wesley Chan', detail: 'Delivered the corner for the equalizer.' },
     ],
     clips: [
-      { minute: 88, title: "Mendoza's late equalizer", views: 690, tag: 'GOAL', side: 'away' },
+      { minute: 88, title: "Mendoza's late equalizer", views: 690, tag: 'GOAL', side: 'away', gotw: true, gotwVotes: 75 },
     ],
     motm: [
       { player: 'Carlos Mendoza', blurb: '2 goals' },
@@ -310,7 +318,11 @@ const matches = [
     lineup: { home: queensXI, away: brooklynXI },
     events: [
       { minute: 19, type: 'goal', side: 'home', player: 'Yusuf Demir', detail: 'First-time finish from a through ball.' },
+      { minute: 19, type: 'assist', side: 'home', player: 'Ravi Patel', detail: 'Threaded the through ball for Demir.' },
       { minute: 44, type: 'goal', side: 'away', player: 'Marcus Reyes', detail: 'Equalizer just before half-time — a curling free kick.' },
+    ],
+    clips: [
+      { minute: 19, title: "Demir's first-time finish", views: 980, tag: 'GOAL', side: 'home', gotw: true, gotwVotes: 140 },
     ],
   },
 ];
@@ -417,8 +429,8 @@ const { count: clipCount } = db
 
 if (clipCount === 0) {
   const insertClip = db.prepare(
-    `INSERT INTO match_clips (match_id, minute, title, views_count, tag, team_id)
-     VALUES (?, ?, ?, ?, ?, ?)`
+    `INSERT INTO match_clips (match_id, minute, title, views_count, tag, team_id, is_gotw_candidate, gotw_votes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (const match of matches) {
@@ -426,7 +438,16 @@ if (clipCount === 0) {
     const matchId = matchIdByKey[matchKeyFor(match)];
     for (const clip of match.clips) {
       const teamId = clip.side === 'home' ? teamIdByName[match.home] : teamIdByName[match.away];
-      insertClip.run(matchId, clip.minute, clip.title, clip.views, clip.tag, teamId);
+      insertClip.run(
+        matchId,
+        clip.minute,
+        clip.title,
+        clip.views,
+        clip.tag,
+        teamId,
+        clip.gotw ? 1 : 0,
+        clip.gotwVotes ?? 0
+      );
     }
   }
 
@@ -456,6 +477,54 @@ if (motmCount === 0) {
   console.log('Seeded motm_candidates table.');
 } else {
   console.log('motm_candidates table already has data, skipping.');
+}
+
+// Shortlist hand-picked from this week's top goal+assist contributors (see match events above).
+const potwShortlist = [
+  { player: 'Marcus Reyes', votes: 145 },
+  { player: 'Yusuf Demir', votes: 98 },
+  { player: 'Carlos Mendoza', votes: 61 },
+  { player: 'Jalen Osei', votes: 40 },
+];
+
+const { count: potwCount } = db.prepare('SELECT COUNT(*) AS count FROM potw_candidates').get();
+
+if (potwCount === 0) {
+  const insertPotw = db.prepare(
+    'INSERT INTO potw_candidates (player_id, votes) VALUES (?, ?)'
+  );
+  for (const cand of potwShortlist) {
+    insertPotw.run(playerIdByName[cand.player], cand.votes);
+  }
+  console.log('Seeded potw_candidates table.');
+} else {
+  console.log('potw_candidates table already has data, skipping.');
+}
+
+const totwRoster = [
+  'Elijah Ward',
+  'Sam Rutherford',
+  'Devon Clarke',
+  'Hassan Idris',
+  'Andre Blake',
+  'Chris Duval',
+  'Marcus Reyes',
+  'Ravi Patel',
+  'Yusuf Demir',
+  'Jalen Osei',
+  'Carlos Mendoza',
+];
+
+const { count: totwCount } = db.prepare('SELECT COUNT(*) AS count FROM totw_picks').get();
+
+if (totwCount === 0) {
+  const insertTotw = db.prepare('INSERT INTO totw_picks (player_id) VALUES (?)');
+  for (const name of totwRoster) {
+    insertTotw.run(playerIdByName[name]);
+  }
+  console.log('Seeded totw_picks table.');
+} else {
+  console.log('totw_picks table already has data, skipping.');
 }
 
 const coachesByTeam = {
@@ -596,6 +665,34 @@ if (friendlyRequestCount === 0) {
 } else {
   console.log('friendly_requests table already has data, skipping.');
 }
+
+const bulletins = [
+  {
+    title: 'Registration for the Fall season opens August 1st',
+    body: 'Rosters lock two weeks before the first matchday — get your paperwork in early to avoid late fees.',
+  },
+  {
+    title: 'Reminder: referee sign-off is mandatory for all Division matches',
+    body: 'Match sheets submitted more than 48 hours after kickoff will not count toward standings.',
+  },
+];
+
+const { count: bulletinCount } = db.prepare('SELECT COUNT(*) AS count FROM bulletins').get();
+
+if (bulletinCount === 0) {
+  const insertBulletin = db.prepare('INSERT INTO bulletins (title, body) VALUES (?, ?)');
+  for (const bulletin of bulletins) {
+    insertBulletin.run(bulletin.title, bulletin.body);
+  }
+  console.log('Seeded bulletins table.');
+} else {
+  console.log('Bulletins table already has data, skipping.');
+}
+
+db.prepare(
+  `UPDATE matches SET is_motw = 1
+   WHERE home_team_id = ? AND away_team_id = ? AND kickoff_at = ?`
+).run(teamIdByName['Queens United SC'], teamIdByName['Brooklyn Kickers FC'], '2026-07-20T16:00:00');
 
 for (const teamId of Object.values(teamIdByName)) {
   recalculateTeamPoints(teamId);

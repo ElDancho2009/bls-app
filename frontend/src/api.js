@@ -20,6 +20,7 @@ async function request(path, options = {}, token) {
 
 export const api = {
   getTeams: () => request('/teams'),
+  getTeam: (id) => request(`/teams/${id}`),
   getMatches: () => request('/matches'),
   getClips: (limit) => request(`/clips${limit ? `?limit=${limit}` : ''}`),
   getMatch: (id) => request(`/matches/${id}`),
@@ -47,6 +48,16 @@ export const api = {
     request(`/matches/${matchId}/referees/${refId}`, { method: 'DELETE' }, token),
 
   getVenues: () => request('/venues'),
+
+  getBulletins: () => request('/bulletins'),
+  getMatchOfWeek: () => request('/matches/motw'),
+  getDiscipline: () => request('/discipline'),
+
+  getGotw: () => request('/gotw'),
+  voteGotw: (clipId) => request(`/gotw/${clipId}/vote`, { method: 'POST' }),
+  getPotw: () => request('/potw'),
+  votePotw: (candidateId) => request(`/potw/${candidateId}/vote`, { method: 'POST' }),
+  getTotw: () => request('/totw'),
 
   getFriendlyRequests: (token) => request('/friendly-requests', {}, token),
   postFriendlyRequest: (body, token) =>

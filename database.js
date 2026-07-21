@@ -60,6 +60,7 @@ addColumnIfMissing('matches', 'division', 'TEXT');
 addColumnIfMissing('matches', 'competition', 'TEXT');
 addColumnIfMissing('matches', 'venue', 'TEXT');
 addColumnIfMissing('matches', 'kickoff_at', 'TEXT');
+addColumnIfMissing('matches', 'is_motw', 'INTEGER NOT NULL DEFAULT 0');
 
 addColumnIfMissing('players', 'position', 'TEXT');
 addColumnIfMissing('players', 'number', 'INTEGER');
@@ -122,6 +123,9 @@ db.exec(`
   )
 `);
 
+addColumnIfMissing('match_clips', 'is_gotw_candidate', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('match_clips', 'gotw_votes', 'INTEGER NOT NULL DEFAULT 0');
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS motm_candidates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -130,6 +134,23 @@ db.exec(`
     blurb TEXT,
     votes INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (match_id) REFERENCES matches (id),
+    FOREIGN KEY (player_id) REFERENCES players (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS potw_candidates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_id INTEGER NOT NULL,
+    votes INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (player_id) REFERENCES players (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS totw_picks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_id INTEGER NOT NULL,
     FOREIGN KEY (player_id) REFERENCES players (id)
   )
 `);
@@ -196,6 +217,15 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (team_id) REFERENCES teams (id),
     FOREIGN KEY (venue_id) REFERENCES venues (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS bulletins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
 

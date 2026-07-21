@@ -51,6 +51,85 @@ app.get('/api/teams', (req, res) => {
   res.json(teams);
 });
 
+app.get('/api/teams/:id', (req, res) => {
+  const teamId = Number(req.params.id);
+  if (!Number.isInteger(teamId)) {
+    return res.status(400).json({ error: 'Team id must be an integer.' });
+  }
+
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(teamId);
+  if (!team) {
+    return res.status(404).json({ error: 'Team not found.' });
+  }
+
+  const divisionStandings = db
+    .prepare(
+      `WITH team_matches AS (
+         SELECT home_team_id AS team_id, home_score AS gf, away_score AS ga
+         FROM matches
+         WHERE status = 'ft' AND (division IS NULL OR division != 'cross')
+         UNION ALL
+         SELECT away_team_id AS team_id, away_score AS gf, home_score AS ga
+         FROM matches
+         WHERE status = 'ft' AND (division IS NULL OR division != 'cross')
+       )
+       SELECT
+         t.id,
+         COUNT(tm.team_id) AS gp,
+         COALESCE(SUM(tm.gf), 0) - COALESCE(SUM(tm.ga), 0) AS gd,
+         COALESCE(SUM(CASE WHEN tm.gf > tm.ga THEN 3 WHEN tm.gf = tm.ga THEN 1 ELSE 0 END), 0) AS pts
+       FROM teams t
+       LEFT JOIN team_matches tm ON tm.team_id = t.id
+       WHERE t.division = ?
+       GROUP BY t.id
+       ORDER BY pts DESC, gd DESC`
+    )
+    .all(team.division);
+
+  const rank = divisionStandings.findIndex((s) => s.id === teamId) + 1;
+  const teamStanding = divisionStandings.find((s) => s.id === teamId) ?? { gp: 0, gd: 0, pts: 0 };
+
+  const pastMatches = db
+    .prepare(
+      `SELECT m.*, home.name AS home_name, home.logo_url AS home_logo_url,
+              away.name AS away_name, away.logo_url AS away_logo_url
+       FROM matches m
+       JOIN teams home ON home.id = m.home_team_id
+       JOIN teams away ON away.id = m.away_team_id
+       WHERE m.status = 'ft' AND (m.home_team_id = ? OR m.away_team_id = ?)
+       ORDER BY m.kickoff_at DESC`
+    )
+    .all(teamId, teamId);
+
+  const results = pastMatches.map((m) => {
+    const isHome = m.home_team_id === teamId;
+    const gf = isHome ? m.home_score : m.away_score;
+    const ga = isHome ? m.away_score : m.home_score;
+    const resultLetter = gf > ga ? 'W' : gf < ga ? 'L' : 'D';
+    const opponent = isHome
+      ? { id: m.away_team_id, name: m.away_name, logoUrl: m.away_logo_url }
+      : { id: m.home_team_id, name: m.home_name, logoUrl: m.home_logo_url };
+
+    return {
+      matchId: m.id,
+      resultLetter,
+      opponent,
+      vsLabel: isHome ? 'vs' : '@',
+      competition: m.competition,
+      scoreText: `${gf}-${ga}`,
+    };
+  });
+
+  res.json({
+    team,
+    rank,
+    gp: teamStanding.gp,
+    gd: teamStanding.gd,
+    pts: teamStanding.pts,
+    results,
+  });
+});
+
 app.get('/api/players', (req, res) => {
   const { team_id } = req.query;
   if (team_id !== undefined) {
@@ -110,6 +189,163 @@ app.get('/api/clips', (req, res) => {
   res.json(clips);
 });
 
+app.get('/api/bulletins', (req, res) => {
+  const bulletins = db.prepare('SELECT * FROM bulletins ORDER BY created_at DESC').all();
+  res.json(bulletins);
+});
+
+app.get('/api/discipline', (req, res) => {
+  const suspended = db
+    .prepare(
+      `SELECT p.*, t.name AS team_name, t.logo_url AS team_logo_url
+       FROM players p
+       JOIN teams t ON t.id = p.team_id
+       WHERE p.red_cards >= 1
+       ORDER BY p.red_cards DESC`
+    )
+    .all();
+
+  const dangerZone = db
+    .prepare(
+      `SELECT p.*, t.name AS team_name, t.logo_url AS team_logo_url
+       FROM players p
+       JOIN teams t ON t.id = p.team_id
+       WHERE p.red_cards = 0 AND p.yellow_cards >= 2
+       ORDER BY p.yellow_cards DESC`
+    )
+    .all();
+
+  res.json({ suspended, dangerZone });
+});
+
+app.get('/api/gotw', (req, res) => {
+  const clips = db
+    .prepare(
+      `SELECT mc.id, mc.minute, mc.title, mc.gotw_votes AS votes,
+              home.name AS home_name, away.name AS away_name
+       FROM match_clips mc
+       JOIN matches m ON m.id = mc.match_id
+       JOIN teams home ON home.id = m.home_team_id
+       JOIN teams away ON away.id = m.away_team_id
+       WHERE mc.is_gotw_candidate = 1
+       ORDER BY mc.gotw_votes DESC`
+    )
+    .all()
+    .map((c) => ({ ...c, context: `${c.home_name} vs ${c.away_name}` }));
+
+  res.json(clips);
+});
+
+app.post('/api/gotw/:clipId/vote', (req, res) => {
+  const clipId = Number(req.params.clipId);
+  if (!Number.isInteger(clipId)) {
+    return res.status(400).json({ error: 'Clip id must be an integer.' });
+  }
+
+  const clip = db
+    .prepare('SELECT * FROM match_clips WHERE id = ? AND is_gotw_candidate = 1')
+    .get(clipId);
+  if (!clip) {
+    return res.status(404).json({ error: 'Goal of the Week candidate not found.' });
+  }
+
+  db.prepare('UPDATE match_clips SET gotw_votes = gotw_votes + 1 WHERE id = ?').run(clipId);
+  const updated = db
+    .prepare('SELECT id, gotw_votes AS votes FROM match_clips WHERE id = ?')
+    .get(clipId);
+  res.json(updated);
+});
+
+function weeklyStatsByPlayerId() {
+  const rows = db
+    .prepare(
+      `SELECT p.id AS player_id,
+              SUM(CASE WHEN me.type = 'goal' THEN 1 ELSE 0 END) AS goals,
+              SUM(CASE WHEN me.type = 'assist' THEN 1 ELSE 0 END) AS assists
+       FROM players p
+       LEFT JOIN match_events me ON me.player_name = p.name
+       GROUP BY p.id`
+    )
+    .all();
+  return Object.fromEntries(rows.map((r) => [r.player_id, { goals: r.goals, assists: r.assists }]));
+}
+
+app.get('/api/potw', (req, res) => {
+  const candidates = db
+    .prepare(
+      `SELECT pc.id, pc.votes, p.id AS player_id, p.name, t.name AS team_name, t.logo_url AS team_logo_url
+       FROM potw_candidates pc
+       JOIN players p ON p.id = pc.player_id
+       JOIN teams t ON t.id = p.team_id
+       ORDER BY pc.votes DESC`
+    )
+    .all();
+
+  const stats = weeklyStatsByPlayerId();
+
+  res.json(
+    candidates.map((c) => ({
+      id: c.id,
+      playerId: c.player_id,
+      name: c.name,
+      teamName: c.team_name,
+      teamLogoUrl: c.team_logo_url,
+      votes: c.votes,
+      goals: stats[c.player_id]?.goals ?? 0,
+      assists: stats[c.player_id]?.assists ?? 0,
+    }))
+  );
+});
+
+app.post('/api/potw/:candidateId/vote', (req, res) => {
+  const candidateId = Number(req.params.candidateId);
+  if (!Number.isInteger(candidateId)) {
+    return res.status(400).json({ error: 'Candidate id must be an integer.' });
+  }
+
+  const candidate = db.prepare('SELECT * FROM potw_candidates WHERE id = ?').get(candidateId);
+  if (!candidate) {
+    return res.status(404).json({ error: 'Player of the Week candidate not found.' });
+  }
+
+  db.prepare('UPDATE potw_candidates SET votes = votes + 1 WHERE id = ?').run(candidateId);
+  const updated = db.prepare('SELECT * FROM potw_candidates WHERE id = ?').get(candidateId);
+  res.json(updated);
+});
+
+app.get('/api/totw', (req, res) => {
+  const picks = db
+    .prepare(
+      `SELECT tp.id, p.id AS player_id, p.name, p.number, p.position, p.rating,
+              p.goals, p.assists, p.clean_sheets,
+              t.name AS team_name, t.logo_url AS team_logo_url
+       FROM totw_picks tp
+       JOIN players p ON p.id = tp.player_id
+       JOIN teams t ON t.id = p.team_id
+       ORDER BY tp.id ASC`
+    )
+    .all();
+
+  const potwWinner = db
+    .prepare('SELECT player_id FROM potw_candidates ORDER BY votes DESC LIMIT 1')
+    .get();
+
+  res.json(
+    picks.map((p) => ({
+      id: p.id,
+      playerId: p.player_id,
+      name: p.name,
+      number: p.number,
+      position: p.position,
+      rating: p.rating,
+      statLine: p.position === 'GK' ? `${p.clean_sheets} CS` : `${p.goals}G ${p.assists}A`,
+      teamName: p.team_name,
+      teamLogoUrl: p.team_logo_url,
+      isPlayerOfWeek: potwWinner != null && p.player_id === potwWinner.player_id,
+    }))
+  );
+});
+
 function recentForm(teamId, excludeMatchId) {
   const rows = db
     .prepare(
@@ -130,6 +366,57 @@ function recentForm(teamId, excludeMatchId) {
     return 'D';
   });
 }
+
+function topScorer(teamId) {
+  return db
+    .prepare('SELECT name, goals FROM players WHERE team_id = ? ORDER BY goals DESC LIMIT 1')
+    .get(teamId);
+}
+
+function topKeeper(teamId) {
+  return db
+    .prepare(
+      "SELECT name, clean_sheets FROM players WHERE team_id = ? AND position = 'GK' ORDER BY clean_sheets DESC LIMIT 1"
+    )
+    .get(teamId);
+}
+
+function topRatedPlayer(teamId) {
+  return db
+    .prepare('SELECT name, rating FROM players WHERE team_id = ? ORDER BY rating DESC LIMIT 1')
+    .get(teamId);
+}
+
+app.get('/api/matches/motw', (req, res) => {
+  const match = db.prepare('SELECT * FROM matches WHERE is_motw = 1 LIMIT 1').get();
+  if (!match) {
+    return res.status(404).json({ error: 'No Match of the Week is set.' });
+  }
+
+  const homeTeam = db.prepare('SELECT * FROM teams WHERE id = ?').get(match.home_team_id);
+  const awayTeam = db.prepare('SELECT * FROM teams WHERE id = ?').get(match.away_team_id);
+
+  const homeScorer = topScorer(match.home_team_id);
+  const awayScorer = topScorer(match.away_team_id);
+  const homeKeeper = topKeeper(match.home_team_id);
+  const awayKeeper = topKeeper(match.away_team_id);
+  const homeStar = topRatedPlayer(match.home_team_id);
+  const awayStar = topRatedPlayer(match.away_team_id);
+
+  res.json({
+    match,
+    homeTeam,
+    awayTeam,
+    form: {
+      home: recentForm(match.home_team_id, match.id),
+      away: recentForm(match.away_team_id, match.id),
+    },
+    offenseLeader: `${homeScorer?.name ?? 'TBD'} (${homeScorer?.goals ?? 0}) · ${awayScorer?.name ?? 'TBD'} (${awayScorer?.goals ?? 0})`,
+    defenseLeader: `${homeKeeper?.name ?? 'TBD'} (${homeKeeper?.clean_sheets ?? 0} CS) · ${awayKeeper?.name ?? 'TBD'} (${awayKeeper?.clean_sheets ?? 0} CS)`,
+    homePlayer: homeStar ? `${homeStar.name} (${homeStar.rating})` : 'TBD',
+    awayPlayer: awayStar ? `${awayStar.name} (${awayStar.rating})` : 'TBD',
+  });
+});
 
 app.get('/api/matches/:id', (req, res) => {
   const matchId = Number(req.params.id);

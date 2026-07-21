@@ -7,7 +7,7 @@ const DIVISIONS = [
   { key: 'bronx', label: 'Bronx' },
 ];
 
-export default function LeaguesScreen() {
+export default function LeaguesScreen({ onSelectTeam }) {
   const [division, setDivision] = useState('queens');
   const [standings, setStandings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,11 @@ export default function LeaguesScreen() {
             <div>PTS</div>
           </div>
           {standings.map((row, i) => (
-            <div key={row.id} className="standings-row">
+            <button
+              key={row.id}
+              className="standings-row"
+              onClick={() => onSelectTeam(row.id)}
+            >
               <div className="standings-rank">{i + 1}</div>
               <div className="standings-name">
                 <Crest src={row.logo_url} size={22} />
@@ -65,7 +69,7 @@ export default function LeaguesScreen() {
                 {row.gd > 0 ? `+${row.gd}` : row.gd}
               </div>
               <div className="standings-pts">{row.pts}</div>
-            </div>
+            </button>
           ))}
         </div>
       )}

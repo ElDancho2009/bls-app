@@ -50,9 +50,9 @@ function PlayerLeaderRow({ rank, player, team, value, valueLabel, onClick }) {
   );
 }
 
-function TeamLeaderRow({ rank, team, value, valueLabel }) {
+function TeamLeaderRow({ rank, team, value, valueLabel, onClick }) {
   return (
-    <div className="leaderboard-row team-leaderboard-row">
+    <button className="leaderboard-row team-leaderboard-row" onClick={onClick}>
       <div className="leaderboard-rank">{rank}</div>
       <Crest src={team.logo_url} />
       <div className="leaderboard-info">
@@ -63,11 +63,11 @@ function TeamLeaderRow({ rank, team, value, valueLabel }) {
         <div className="leaderboard-value-num">{value}</div>
         <div className="leaderboard-value-label">{valueLabel}</div>
       </div>
-    </div>
+    </button>
   );
 }
 
-export default function CardsScreen() {
+export default function CardsScreen({ onSelectTeam }) {
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
   const [standings, setStandings] = useState([]);
@@ -178,7 +178,14 @@ export default function CardsScreen() {
             <div className="leaderboard-section-title">BEST ATTACK</div>
             <div className="leaderboard-list">
               {teamOffense.map((row, i) => (
-                <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.gf} valueLabel="GF" />
+                <TeamLeaderRow
+                  key={row.id}
+                  rank={i + 1}
+                  team={row}
+                  value={row.gf}
+                  valueLabel="GF"
+                  onClick={() => onSelectTeam(row.id)}
+                />
               ))}
             </div>
           </section>
@@ -187,7 +194,14 @@ export default function CardsScreen() {
             <div className="leaderboard-section-title">BEST DEFENSE</div>
             <div className="leaderboard-list">
               {teamDefense.map((row, i) => (
-                <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.ga} valueLabel="GA" />
+                <TeamLeaderRow
+                  key={row.id}
+                  rank={i + 1}
+                  team={row}
+                  value={row.ga}
+                  valueLabel="GA"
+                  onClick={() => onSelectTeam(row.id)}
+                />
               ))}
             </div>
           </section>
@@ -199,6 +213,10 @@ export default function CardsScreen() {
           player={selectedPlayer}
           team={teamsById[selectedPlayer.team_id]}
           onClose={() => setSelectedPlayer(null)}
+          onSelectTeam={(teamId) => {
+            setSelectedPlayer(null);
+            onSelectTeam(teamId);
+          }}
         />
       )}
     </div>

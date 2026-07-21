@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
 import { api } from '../../api.js';
 
-const FORMATION_SLOTS = [
+export const FORMATION_SLOTS = [
   { key: 'GK', group: 'GK', num: 1, x: 50, y: 90 },
   { key: 'LB', group: 'DF', num: 2, x: 16, y: 72 },
   { key: 'CB1', group: 'DF', num: 3, x: 38, y: 76 },

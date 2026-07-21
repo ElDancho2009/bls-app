@@ -22,7 +22,7 @@ function statRows(player) {
   ];
 }
 
-export default function PlayerDetailModal({ player, team, onClose }) {
+export default function PlayerDetailModal({ player, team, onClose, onSelectTeam }) {
   if (!player) return null;
 
   return (
@@ -39,9 +39,12 @@ export default function PlayerDetailModal({ player, team, onClose }) {
           <div className="player-modal-rating">{player.rating}</div>
           <div>
             <div className="player-modal-name">{player.name}</div>
-            <div className="player-modal-meta">
+            <button
+              className="player-modal-meta player-modal-team-link"
+              onClick={() => onSelectTeam(player.team_id)}
+            >
               {team?.name} · {player.position} · #{player.number}
-            </div>
+            </button>
           </div>
         </div>
 

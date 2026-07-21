@@ -8,7 +8,7 @@ const EVENT_FILTERS = [
   { key: 'card', label: 'Cards' },
 ];
 
-export default function MatchCenterScreen({ matchId, onClose }) {
+export default function MatchCenterScreen({ matchId, onClose, onSelectTeam }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('timeline');
@@ -52,9 +52,9 @@ export default function MatchCenterScreen({ matchId, onClose }) {
       </button>
 
       <div className="mc-header">
-        <div className="mc-team">
+        <button className="mc-team" onClick={() => onSelectTeam(homeTeam.id)}>
           <div className="mc-team-name">{homeTeam.name}</div>
-        </div>
+        </button>
         <div className="mc-center">
           <div className="mc-score">
             {match.status === 'upcoming'
@@ -66,9 +66,9 @@ export default function MatchCenterScreen({ matchId, onClose }) {
           </div>
           <div className="mc-status">{match.status.toUpperCase()}</div>
         </div>
-        <div className="mc-team">
+        <button className="mc-team" onClick={() => onSelectTeam(awayTeam.id)}>
           <div className="mc-team-name">{awayTeam.name}</div>
-        </div>
+        </button>
       </div>
       <div className="mc-venue">{match.venue}</div>
 
