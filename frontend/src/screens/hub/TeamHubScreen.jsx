@@ -7,6 +7,7 @@ import LineupBuilderScreen from './LineupBuilderScreen.jsx';
 import SquadScreen from './SquadScreen.jsx';
 import MatchmakerScreen from './MatchmakerScreen.jsx';
 import RefereesScreen from './RefereesScreen.jsx';
+import CheckinScreen from './CheckinScreen.jsx';
 
 const HUB_TABS = [
   { key: 'dashboard', label: 'Dashboard' },
@@ -14,6 +15,7 @@ const HUB_TABS = [
   { key: 'squad', label: 'Squad' },
   { key: 'matchmaker', label: 'Matchmaker' },
   { key: 'referees', label: 'Referees' },
+  { key: 'checkin', label: 'Check-in' },
 ];
 
 export default function TeamHubScreen() {
@@ -52,6 +54,7 @@ export default function TeamHubScreen() {
       {hubScreen === 'squad' && <SquadScreen />}
       {hubScreen === 'matchmaker' && <MatchmakerScreen />}
       {hubScreen === 'referees' && <RefereesScreen />}
+      {hubScreen === 'checkin' && <CheckinScreen />}
     </div>
   );
 }

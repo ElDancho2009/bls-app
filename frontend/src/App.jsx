@@ -5,6 +5,7 @@ import NewsScreen from './screens/NewsScreen.jsx';
 import LeaguesScreen from './screens/LeaguesScreen.jsx';
 import CardsScreen from './screens/CardsScreen.jsx';
 import TeamPageScreen from './screens/TeamPageScreen.jsx';
+import RefSheetScreen from './screens/RefSheetScreen.jsx';
 import TeamHubScreen from './screens/hub/TeamHubScreen.jsx';
 
 function MatchesIcon() {
@@ -65,6 +66,7 @@ export default function App() {
 
   const pushMatch = (id) => setOverlayStack((stack) => [...stack, { type: 'match', id }]);
   const pushTeam = (id) => setOverlayStack((stack) => [...stack, { type: 'team', id }]);
+  const pushRefSheet = (id) => setOverlayStack((stack) => [...stack, { type: 'refsheet', id }]);
   const popOverlay = () => setOverlayStack((stack) => stack.slice(0, -1));
 
   const hasOverlay = overlayStack.length > 0;
@@ -81,10 +83,18 @@ export default function App() {
         {overlayStack.map((entry, i) => (
           <div key={i} style={{ display: i === overlayStack.length - 1 ? 'block' : 'none' }}>
             {entry.type === 'match' && (
-              <MatchCenterScreen matchId={entry.id} onClose={popOverlay} onSelectTeam={pushTeam} />
+              <MatchCenterScreen
+                matchId={entry.id}
+                onClose={popOverlay}
+                onSelectTeam={pushTeam}
+                onSelectRefSheet={pushRefSheet}
+              />
             )}
             {entry.type === 'team' && (
               <TeamPageScreen teamId={entry.id} onClose={popOverlay} onSelectMatch={pushMatch} />
+            )}
+            {entry.type === 'refsheet' && (
+              <RefSheetScreen matchId={entry.id} onClose={popOverlay} />
             )}
           </div>
         ))}

@@ -34,18 +34,16 @@ function statusLabel(match) {
 export default function MatchesScreen({ onSelectMatch }) {
   const [teams, setTeams] = useState([]);
   const [matches, setMatches] = useState([]);
-  const [clips, setClips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [division, setDivision] = useState('all');
   const [dayOffset, setDayOffset] = useState(0);
 
   useEffect(() => {
-    Promise.all([api.getTeams(), api.getMatches(), api.getClips()])
-      .then(([teamsData, matchesData, clipsData]) => {
+    Promise.all([api.getTeams(), api.getMatches()])
+      .then(([teamsData, matchesData]) => {
         setTeams(teamsData);
         setMatches(matchesData);
-        setClips(clipsData);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -78,28 +76,6 @@ export default function MatchesScreen({ onSelectMatch }) {
           <div className="brand-subtitle">SOCCER</div>
         </div>
       </header>
-
-      {clips.length > 0 && (
-        <div className="featured-clips">
-          <div className="leaderboard-section-title">FEATURED CLIPS</div>
-          <div className="featured-clips-row">
-            {clips.map((clip) => (
-              <button
-                key={clip.id}
-                className="featured-clip-card"
-                onClick={() => onSelectMatch(clip.match_id)}
-              >
-                <div className="featured-clip-thumb">
-                  <span className="clip-tag-badge">{clip.tag}</span>
-                  <span className="clip-minute-badge">{clip.minute}'</span>
-                </div>
-                <div className="featured-clip-title">{clip.title}</div>
-                <div className="featured-clip-meta">{clip.views_count.toLocaleString()} views</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       <div className="chip-row">
         {DIVISIONS.map((d) => (

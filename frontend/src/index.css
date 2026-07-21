@@ -1,17 +1,18 @@
 :root {
   color-scheme: dark;
-  --bg: oklch(0.08 0.008 255);
-  --bg-panel: oklch(0.15 0.012 255);
-  --bg-elev: oklch(0.19 0.014 255);
-  --border: oklch(0.24 0.014 255);
-  --text: oklch(0.94 0.004 255);
-  --text-dim: oklch(0.6 0.012 255);
+  --bg: #0b0e14;
+  --bg-panel: #10131b;
+  --bg-elev: rgba(255, 255, 255, 0.03);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #f3f4f6;
+  --text-dim: #9ca3af;
   --text-faint: oklch(0.42 0.012 255);
-  --accent: #e0af47;
-  --accent-ink: oklch(0.12 0.02 255);
-  --live: oklch(0.78 0.19 130);
+  --accent: #eab308;
+  --accent-ink: #0b0e14;
+  --live: #22c55e;
   --warn: oklch(0.78 0.16 90);
   --danger: #d1293f;
+  --glass-blur: blur(12px);
 }
 
 * {
@@ -21,8 +22,10 @@
 body {
   margin: 0;
   background: var(--bg);
-  font-family: 'Work Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button {
@@ -33,13 +36,81 @@ button {
   color: inherit;
 }
 
+/* Glassmorphic card surfaces: shared blur for every elevated card/modal,
+   plus a fallback border for the ones that don't manage their own. */
+.mc-header,
+.clip-row,
+.leaderboard-row,
+.player-modal,
+.dashboard-card,
+.dashboard-stat,
+.bench-player,
+.squad-row,
+.post-open-date-form,
+.matchmaker-row,
+.venue-card,
+.venue-guide,
+.gotw-card,
+.ig-export-modal,
+.team-page-result-row,
+.discipline-list,
+.motw-card {
+  border: 1px solid var(--border);
+}
+
+.mc-header,
+.clip-row,
+.leaderboard-row,
+.player-modal,
+.dashboard-card,
+.dashboard-stat,
+.bench-player,
+.squad-row,
+.post-open-date-form,
+.matchmaker-row,
+.venue-card,
+.venue-guide,
+.gotw-card,
+.ig-export-modal,
+.team-page-result-row,
+.discipline-list,
+.motw-card,
+.fixture-row,
+.motm-candidate,
+.referee-row,
+.bulletin-card,
+.motm-cta-card {
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
 .app-shell {
-  max-width: 480px;
+  max-width: 420px;
+  width: 100%;
+  height: 100vh;
   margin: 0 auto;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--bg-panel);
+  overflow: hidden;
+}
+
+@media (min-width: 640px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .app-shell {
+    height: min(90vh, 880px);
+    border-radius: 48px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 25px 50px -12px rgba(0, 0, 0, 0.6),
+      0 0 0 1px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .app-content {
@@ -253,73 +324,6 @@ button {
   font-size: 10.5px;
   letter-spacing: 0.4px;
   color: var(--text-dim);
-}
-
-/* Featured clips (Matches screen) */
-.featured-clips {
-  padding-bottom: 4px;
-}
-
-.featured-clips-row {
-  display: flex;
-  gap: 10px;
-  padding: 6px 20px 14px;
-  overflow-x: auto;
-}
-
-.featured-clip-card {
-  flex-shrink: 0;
-  width: 150px;
-  text-align: left;
-}
-
-.featured-clip-thumb {
-  position: relative;
-  width: 150px;
-  height: 84px;
-  border-radius: 12px;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--bg-elev),
-    var(--bg-elev) 10px,
-    oklch(0.22 0.014 255) 10px,
-    oklch(0.22 0.014 255) 20px
-  );
-}
-
-.clip-tag-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: var(--danger);
-  color: var(--text);
-  font-weight: 800;
-  font-size: 9px;
-  letter-spacing: 0.4px;
-  padding: 3px 6px;
-  border-radius: 6px;
-}
-
-.clip-minute-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  font-weight: 700;
-  font-size: 11px;
-  color: var(--text);
-}
-
-.featured-clip-title {
-  font-weight: 600;
-  font-size: 11.5px;
-  margin-top: 6px;
-  line-height: 1.3;
-}
-
-.featured-clip-meta {
-  font-size: 10.5px;
-  color: var(--text-faint);
-  margin-top: 2px;
 }
 
 /* Tab bar */
@@ -2151,4 +2155,473 @@ button {
   font-weight: 800;
   font-size: 15px;
   flex-shrink: 0;
+}
+
+/* Match Center: referee sign-off link */
+.mc-ref-link-row {
+  text-align: center;
+  margin: 0 20px 16px;
+}
+
+.mc-ref-link {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--text-faint);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 11.5px;
+}
+
+/* Referee Sign-Off sheet */
+.ref-sheet {
+  padding-bottom: 24px;
+}
+
+.ref-sheet-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin: -6px 0 14px;
+}
+
+.ref-sheet-pin-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 32px 24px;
+  gap: 14px;
+}
+
+.ref-sheet-pin-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.ref-sheet-pin-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.ref-sheet-pin-input {
+  width: 140px;
+  text-align: center;
+  letter-spacing: 10px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  margin-top: 8px;
+}
+
+.ref-sheet-unlock-button {
+  width: 100%;
+  max-width: 220px;
+  text-align: center;
+  padding: 13px 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.ref-sheet-submitted {
+  margin: 40px 20px;
+  padding: 32px 20px;
+  text-align: center;
+  border-radius: 16px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+}
+
+.ref-sheet-submitted-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  color: var(--accent);
+}
+
+.ref-sheet-submitted-body {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.ref-sheet-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin: 0 20px 16px;
+  padding: 14px;
+}
+
+.ref-sheet-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.ref-sheet-score {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+}
+
+.ref-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 20px 16px;
+}
+
+.ref-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.ref-sheet-minute {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--accent);
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.ref-sheet-player {
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.ref-sheet-player-flex {
+  flex: 1;
+}
+
+.ref-sheet-card-swatch {
+  width: 16px;
+  height: 22px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ref-sheet-card-swatch.card-red {
+  background: var(--danger);
+}
+
+.ref-sheet-card-swatch.card-yellow {
+  background: var(--warn);
+}
+
+.ref-sheet-motm-select-wrap {
+  padding: 0 20px 20px;
+}
+
+.ref-sheet-motm-select {
+  width: 100%;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.ref-sheet-submit-button {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 0 20px;
+  text-align: center;
+  padding: 14px 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.ref-sheet-submit-button:disabled {
+  opacity: 0.5;
+}
+
+/* Check-in */
+.checkin-search-row {
+  padding: 4px 20px 12px;
+}
+
+.checkin-search-input {
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 10px 13px;
+  color: var(--text);
+  font-size: 12.5px;
+  box-sizing: border-box;
+}
+
+.checkin-filter-row {
+  padding-bottom: 14px;
+}
+
+.checkin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 20px 24px;
+}
+
+.checkin-card {
+  background: var(--bg-elev);
+  border-radius: 14px;
+  padding: 12px 13px;
+}
+
+.checkin-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.checkin-initials {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: oklch(0.26 0.016 255);
+  color: var(--text-dim);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkin-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: oklch(0.26 0.016 255);
+  color: var(--text-dim);
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.checkin-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.checkin-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.checkin-pos {
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 1px;
+}
+
+.checkin-badge {
+  flex-shrink: 0;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 9.5px;
+  white-space: nowrap;
+  color: var(--live);
+  background: transparent;
+}
+
+.checkin-toggle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  background: transparent;
+}
+
+.checkin-toggle.checkin-toggle-active {
+  border-color: var(--live);
+  background: var(--live);
+}
+
+.checkin-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid;
+  background: rgba(255, 255, 255, 0.03);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Pitch sheet */
+.pitch-sheet-trigger {
+  display: block;
+  width: calc(100% - 40px);
+  margin: 2px 20px 0;
+  text-align: center;
+  padding: 13px 0;
+  border-radius: 12px;
+  border: 1.5px dashed var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.pitch-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+}
+
+.pitch-sheet-modal {
+  background: oklch(0.13 0.012 255);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  width: 100%;
+  max-width: 300px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.pitch-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.pitch-sheet-logo {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+.pitch-sheet-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.pitch-sheet-section-label {
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  margin: 14px 0 8px;
+}
+
+.pitch-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pitch-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 11px;
+}
+
+.pitch-sheet-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  width: 22px;
+  flex-shrink: 0;
+}
+
+.pitch-sheet-name {
+  font-weight: 600;
+  font-size: 12px;
+  flex: 1;
+}
+
+.pitch-sheet-pos {
+  font-weight: 700;
+  font-size: 9.5px;
+  color: var(--text-faint);
+}
+
+.pitch-sheet-verified {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: oklch(0.3 0.14 145 / 30%);
+  color: var(--live);
+  font-weight: 700;
+  font-size: 8.5px;
+  flex-shrink: 0;
+}
+
+.pitch-sheet-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.pitch-sheet-close,
+.pitch-sheet-share {
+  flex: 1;
+  text-align: center;
+  padding: 11px 0;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+}
+
+.pitch-sheet-close {
+  background: oklch(0.22 0.016 255);
+  color: var(--text-dim);
+}
+
+.pitch-sheet-share {
+  background: var(--accent);
+  color: var(--accent-ink);
 }

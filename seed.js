@@ -551,26 +551,54 @@ if (userCount === 0) {
 }
 
 const referees = [
-  { name: 'Marcus Alvarado', level: 'Grade 8', available: 1 },
-  { name: 'Diane Whitfield', level: 'Grade 7', available: 0 },
-  { name: 'Carlos Nguyen', level: 'Grade 8', available: 1 },
-  { name: 'Priya Osei', level: 'Grade 6', available: 0 },
+  { name: 'Marcus Alvarado', level: 'Grade 8', available: 1, pin: '1234' },
+  { name: 'Diane Whitfield', level: 'Grade 7', available: 0, pin: '2345' },
+  { name: 'Carlos Nguyen', level: 'Grade 8', available: 1, pin: '3456' },
+  { name: 'Priya Osei', level: 'Grade 6', available: 0, pin: '4567' },
 ];
 
 const { count: refereeCount } = db.prepare('SELECT COUNT(*) AS count FROM referees').get();
 
 if (refereeCount === 0) {
   const insertReferee = db.prepare(
-    'INSERT INTO referees (name, level, available) VALUES (?, ?, ?)'
+    'INSERT INTO referees (name, level, available, pin) VALUES (?, ?, ?, ?)'
   );
 
   for (const referee of referees) {
-    insertReferee.run(referee.name, referee.level, referee.available);
+    insertReferee.run(referee.name, referee.level, referee.available, referee.pin);
   }
 
   console.log('Seeded referees table.');
 } else {
   console.log('Referees table already has data, skipping.');
+}
+
+const refereeIdByName = Object.fromEntries(
+  db
+    .prepare('SELECT id, name FROM referees')
+    .all()
+    .map((row) => [row.name, row.id])
+);
+
+const { count: matchRefereeCount } = db
+  .prepare('SELECT COUNT(*) AS count FROM match_referees')
+  .get();
+
+if (matchRefereeCount === 0) {
+  const insertMatchReferee = db.prepare(
+    'INSERT OR IGNORE INTO match_referees (match_id, referee_id) VALUES (?, ?)'
+  );
+
+  for (const match of matches) {
+    if (!match.events) continue;
+    const matchId = matchIdByKey[matchKeyFor(match)];
+    insertMatchReferee.run(matchId, refereeIdByName['Marcus Alvarado']);
+    insertMatchReferee.run(matchId, refereeIdByName['Carlos Nguyen']);
+  }
+
+  console.log('Seeded match_referees table.');
+} else {
+  console.log('match_referees table already has data, skipping.');
 }
 
 const venues = [

@@ -22,7 +22,6 @@ export const api = {
   getTeams: () => request('/teams'),
   getTeam: (id) => request(`/teams/${id}`),
   getMatches: () => request('/matches'),
-  getClips: (limit) => request(`/clips${limit ? `?limit=${limit}` : ''}`),
   getMatch: (id) => request(`/matches/${id}`),
   voteMotm: (matchId, candidateId) =>
     request(`/matches/${matchId}/motm/${candidateId}/vote`, { method: 'POST' }),
@@ -39,6 +38,22 @@ export const api = {
 
   putMatchLineup: (matchId, body, token) =>
     request(`/matches/${matchId}/lineup`, { method: 'PUT', body: JSON.stringify(body) }, token),
+
+  getCheckins: (matchId, token) => request(`/matches/${matchId}/checkins`, {}, token),
+  toggleCheckin: (matchId, playerId, token) =>
+    request(`/matches/${matchId}/checkins/${playerId}`, { method: 'POST' }, token),
+  getPitchSheet: (matchId, token) => request(`/matches/${matchId}/pitch-sheet`, {}, token),
+
+  verifyRefSheetPin: (matchId, pin) =>
+    request(`/matches/${matchId}/ref-sheet/verify-pin`, {
+      method: 'POST',
+      body: JSON.stringify({ pin }),
+    }),
+  submitRefSheet: (matchId, { pin, motmPlayerId }) =>
+    request(`/matches/${matchId}/ref-sheet/submit`, {
+      method: 'POST',
+      body: JSON.stringify({ pin, motmPlayerId }),
+    }),
 
   getReferees: () => request('/referees'),
   getMatchReferees: (matchId) => request(`/matches/${matchId}/referees`),

@@ -8,7 +8,7 @@ const EVENT_FILTERS = [
   { key: 'card', label: 'Cards' },
 ];
 
-export default function MatchCenterScreen({ matchId, onClose, onSelectTeam }) {
+export default function MatchCenterScreen({ matchId, onClose, onSelectTeam, onSelectRefSheet }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('timeline');
@@ -71,6 +71,14 @@ export default function MatchCenterScreen({ matchId, onClose, onSelectTeam }) {
         </button>
       </div>
       <div className="mc-venue">{match.venue}</div>
+
+      {(match.status === 'live' || match.status === 'ft') && (
+        <div className="mc-ref-link-row">
+          <button className="mc-ref-link" onClick={() => onSelectRefSheet(match.id)}>
+            ⚑ Referee Sign-Off
+          </button>
+        </div>
+      )}
 
       {motm.length > 0 && (
         <div className="motm-cta-card">

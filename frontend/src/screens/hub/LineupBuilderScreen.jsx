@@ -137,7 +137,7 @@ export default function LineupBuilderScreen() {
     }));
     setSaveState('saving');
     try {
-      await api.putMatchLineup(nextMatch.id, { formation: '4-3-3', players }, token);
+      await api.putMatchLineup(nextMatch.id, { formation: '4-3-3', players, bench: lineup.bench }, token);
       setSaveState('saved');
       setTimeout(() => setSaveState('idle'), 1500);
     } catch (err) {

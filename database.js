@@ -61,6 +61,8 @@ addColumnIfMissing('matches', 'competition', 'TEXT');
 addColumnIfMissing('matches', 'venue', 'TEXT');
 addColumnIfMissing('matches', 'kickoff_at', 'TEXT');
 addColumnIfMissing('matches', 'is_motw', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('matches', 'ref_sheet_submitted_at', 'TEXT');
+addColumnIfMissing('matches', 'official_motm_player_id', 'INTEGER');
 
 addColumnIfMissing('players', 'position', 'TEXT');
 addColumnIfMissing('players', 'number', 'INTEGER');
@@ -180,9 +182,12 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     level TEXT NOT NULL,
-    available INTEGER NOT NULL DEFAULT 1
+    available INTEGER NOT NULL DEFAULT 1,
+    pin TEXT
   )
 `);
+
+addColumnIfMissing('referees', 'pin', 'TEXT');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS match_referees (
@@ -192,6 +197,18 @@ db.exec(`
     FOREIGN KEY (match_id) REFERENCES matches (id),
     FOREIGN KEY (referee_id) REFERENCES referees (id),
     UNIQUE (match_id, referee_id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS match_checkins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    match_id INTEGER NOT NULL,
+    player_id INTEGER NOT NULL,
+    checked_in INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (match_id) REFERENCES matches (id),
+    FOREIGN KEY (player_id) REFERENCES players (id),
+    UNIQUE (match_id, player_id)
   )
 `);
 

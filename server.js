@@ -174,21 +174,6 @@ app.get('/api/matches', (req, res) => {
   res.json(matches);
 });
 
-app.get('/api/clips', (req, res) => {
-  const limit = Math.min(Number(req.query.limit) || 6, 20);
-  const clips = db
-    .prepare(
-      `SELECT mc.id, mc.match_id, mc.minute, mc.title, mc.views_count, mc.tag,
-              t.name AS team_name, t.logo_url AS team_logo_url
-       FROM match_clips mc
-       JOIN teams t ON t.id = mc.team_id
-       ORDER BY mc.views_count DESC
-       LIMIT ?`
-    )
-    .all(limit);
-  res.json(clips);
-});
-
 app.get('/api/bulletins', (req, res) => {
   const bulletins = db.prepare('SELECT * FROM bulletins ORDER BY created_at DESC').all();
   res.json(bulletins);
@@ -473,6 +458,61 @@ app.get('/api/matches/:id', (req, res) => {
   res.json({ match, homeTeam, awayTeam, events, lineups, media, motm, form });
 });
 
+function refereePinIsValid(matchId, pin) {
+  if (typeof pin !== 'string' || pin.length === 0) return false;
+  const match = db
+    .prepare(
+      `SELECT 1
+       FROM match_referees mr
+       JOIN referees r ON r.id = mr.referee_id
+       WHERE mr.match_id = ? AND r.pin = ?`
+    )
+    .get(matchId, pin);
+  return !!match;
+}
+
+app.post('/api/matches/:id/ref-sheet/verify-pin', (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const { pin } = req.body || {};
+  res.json({ valid: refereePinIsValid(matchId, pin) });
+});
+
+app.post('/api/matches/:id/ref-sheet/submit', (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  if (!match) {
+    return res.status(404).json({ error: 'Match not found.' });
+  }
+  if (match.ref_sheet_submitted_at) {
+    return res.status(400).json({ error: 'This match sheet has already been submitted.' });
+  }
+
+  const { pin, motmPlayerId } = req.body || {};
+  if (!refereePinIsValid(matchId, pin)) {
+    return res.status(403).json({ error: 'Invalid referee PIN for this match.' });
+  }
+  if (!Number.isInteger(motmPlayerId)) {
+    return res.status(400).json({ error: 'motmPlayerId is required.' });
+  }
+
+  db.prepare(
+    `UPDATE matches
+     SET ref_sheet_submitted_at = datetime('now'), official_motm_player_id = ?
+     WHERE id = ?`
+  ).run(motmPlayerId, matchId);
+
+  const updated = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  res.json(updated);
+});
+
 app.post('/api/matches/:id/motm/:candidateId/vote', (req, res) => {
   const matchId = Number(req.params.id);
   const candidateId = Number(req.params.candidateId);
@@ -511,7 +551,7 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     return res.status(403).json({ error: 'Your team is not part of this match.' });
   }
 
-  const { formation, players } = req.body || {};
+  const { formation, players, bench } = req.body || {};
   if (typeof formation !== 'string' || !Array.isArray(players) || players.length === 0) {
     return res
       .status(400)
@@ -521,6 +561,9 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     if (!Number.isInteger(p.playerId) || !Number.isInteger(p.num) || typeof p.pos !== 'string') {
       return res.status(400).json({ error: 'Each player needs playerId, num, and pos.' });
     }
+  }
+  if (bench !== undefined && !Array.isArray(bench)) {
+    return res.status(400).json({ error: 'bench must be an array of player ids if provided.' });
   }
 
   try {
@@ -536,6 +579,18 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     );
     for (const p of players) {
       insertLineup.run(matchId, teamId, p.playerId, p.num, p.pos);
+    }
+
+    if (bench && bench.length > 0) {
+      const benchPlayers = db
+        .prepare(`SELECT id, number, position FROM players WHERE id IN (${bench.map(() => '?').join(',')})`)
+        .all(...bench);
+      const insertBench = db.prepare(
+        'INSERT INTO match_lineups (match_id, team_id, player_id, num, pos, is_starting) VALUES (?, ?, ?, ?, ?, 0)'
+      );
+      for (const bp of benchPlayers) {
+        insertBench.run(matchId, teamId, bp.id, bp.number, bp.position);
+      }
     }
 
     const formationColumn = isHome ? 'home_formation' : 'away_formation';
@@ -558,6 +613,135 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     .all(matchId, teamId);
 
   res.json({ formation, lineup });
+});
+
+function checkinBadge(player) {
+  if (player.status === 'injured') {
+    return { badgeLabel: 'Injured', badgeBg: '#d1293f', badgeColor: '#fff', flagged: true, canCheckIn: true };
+  }
+  if (player.red_cards >= 1) {
+    return {
+      badgeLabel: 'Suspended',
+      badgeBg: '#d1293f',
+      badgeColor: '#fff',
+      flagged: true,
+      bannerText: 'Serving a suspension from a red card — cannot be fielded this match.',
+      canCheckIn: false,
+    };
+  }
+  if (player.yellow_cards >= 2) {
+    return {
+      badgeLabel: 'Danger Zone',
+      badgeBg: 'oklch(0.3 0.09 90)',
+      badgeColor: 'oklch(0.82 0.16 90)',
+      flagged: true,
+      bannerText: 'One more caution away from a suspension.',
+      canCheckIn: true,
+    };
+  }
+  return { badgeLabel: 'Available', badgeBg: null, badgeColor: null, flagged: false, canCheckIn: true };
+}
+
+app.get('/api/matches/:id/checkins', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const teamId = req.user.team_id;
+  const players = db.prepare('SELECT * FROM players WHERE team_id = ? ORDER BY number ASC').all(teamId);
+  const checkins = db
+    .prepare('SELECT player_id, checked_in FROM match_checkins WHERE match_id = ?')
+    .all(matchId);
+  const checkedInByPlayerId = Object.fromEntries(
+    checkins.map((c) => [c.player_id, !!c.checked_in])
+  );
+
+  res.json(
+    players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      number: p.number,
+      position: p.position,
+      checkedIn: checkedInByPlayerId[p.id] ?? false,
+      ...checkinBadge(p),
+    }))
+  );
+});
+
+app.post('/api/matches/:id/checkins/:playerId', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  const playerId = Number(req.params.playerId);
+  if (!Number.isInteger(matchId) || !Number.isInteger(playerId)) {
+    return res.status(400).json({ error: 'Match id and player id must be integers.' });
+  }
+
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+  if (!player) {
+    return res.status(404).json({ error: 'Player not found.' });
+  }
+  if (player.team_id !== req.user.team_id) {
+    return res.status(403).json({ error: 'You can only check in players on your own team.' });
+  }
+
+  const existing = db
+    .prepare('SELECT * FROM match_checkins WHERE match_id = ? AND player_id = ?')
+    .get(matchId, playerId);
+  const nextValue = existing ? (existing.checked_in ? 0 : 1) : 1;
+
+  db.prepare(
+    `INSERT INTO match_checkins (match_id, player_id, checked_in) VALUES (?, ?, ?)
+     ON CONFLICT (match_id, player_id) DO UPDATE SET checked_in = excluded.checked_in`
+  ).run(matchId, playerId, nextValue);
+
+  res.json({ playerId, checkedIn: !!nextValue });
+});
+
+app.get('/api/matches/:id/pitch-sheet', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  if (!match) {
+    return res.status(404).json({ error: 'Match not found.' });
+  }
+
+  const teamId = req.user.team_id;
+  if (match.home_team_id !== teamId && match.away_team_id !== teamId) {
+    return res.status(403).json({ error: 'Your team is not part of this match.' });
+  }
+
+  const lineupRows = db
+    .prepare(
+      `SELECT ml.*, p.name AS player_name
+       FROM match_lineups ml
+       JOIN players p ON p.id = ml.player_id
+       WHERE ml.match_id = ? AND ml.team_id = ?
+       ORDER BY ml.is_starting DESC, ml.num ASC`
+    )
+    .all(matchId, teamId);
+
+  const checkins = db
+    .prepare('SELECT player_id, checked_in FROM match_checkins WHERE match_id = ?')
+    .all(matchId);
+  const checkedInByPlayerId = Object.fromEntries(
+    checkins.map((c) => [c.player_id, !!c.checked_in])
+  );
+
+  const toRow = (row) => ({
+    playerId: row.player_id,
+    num: row.num,
+    name: row.player_name,
+    pos: row.pos,
+    verified: checkedInByPlayerId[row.player_id] ?? false,
+  });
+
+  res.json({
+    starters: lineupRows.filter((r) => r.is_starting).map(toRow),
+    substitutes: lineupRows.filter((r) => !r.is_starting).map(toRow),
+  });
 });
 
 app.get('/api/referees', (req, res) => {

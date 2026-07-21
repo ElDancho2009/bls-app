@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
 import { api } from '../../api.js';
+import PitchSheetModal from './PitchSheetModal.jsx';
 
 export default function DashboardScreen({ onNavigate }) {
   const { team, token } = useAuth();
@@ -10,6 +11,7 @@ export default function DashboardScreen({ onNavigate }) {
   const [refereeCount, setRefereeCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pitchSheetOpen, setPitchSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!team) return;
@@ -102,7 +104,20 @@ export default function DashboardScreen({ onNavigate }) {
         <button className="dashboard-link" onClick={() => onNavigate('referees')}>
           Referees <span className="dashboard-link-arrow">›</span>
         </button>
+        <button className="dashboard-link" onClick={() => onNavigate('checkin')}>
+          Check-in <span className="dashboard-link-arrow">›</span>
+        </button>
       </div>
+
+      {nextMatch && (
+        <button className="pitch-sheet-trigger" onClick={() => setPitchSheetOpen(true)}>
+          Generate Official Pitch Sheet
+        </button>
+      )}
+
+      {pitchSheetOpen && (
+        <PitchSheetModal matchId={nextMatch.id} onClose={() => setPitchSheetOpen(false)} />
+      )}
     </div>
   );
 }
