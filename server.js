@@ -1,6 +1,13 @@
 const express = require('express');
 const db = require('./database.js');
 const { recalculateTeamPoints } = require('./points.js');
+const {
+  hashPassword,
+  verifyPassword,
+  createSession,
+  destroySession,
+  requireAuth,
+} = require('./auth.js');
 
 const app = express();
 const PORT = 3000;
@@ -11,14 +18,76 @@ app.get('/', (req, res) => {
   res.send('BLS App Engine is Live! ');
 });
 
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  if (typeof email !== 'string' || typeof password !== 'string') {
+    return res.status(400).json({ error: 'email and password are required.' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  if (!user || !verifyPassword(password, user.password_hash)) {
+    return res.status(401).json({ error: 'Invalid email or password.' });
+  }
+
+  const { token } = createSession(user.id);
+  res.json({
+    token,
+    user: { id: user.id, email: user.email, teamId: user.team_id, role: user.role },
+  });
+});
+
+app.post('/api/auth/logout', requireAuth, (req, res) => {
+  destroySession(req.sessionToken);
+  res.status(204).end();
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+  const team = db.prepare('SELECT * FROM teams WHERE id = ?').get(req.user.team_id);
+  res.json({ user: req.user, team });
+});
+
 app.get('/api/teams', (req, res) => {
   const teams = db.prepare('SELECT * FROM teams').all();
   res.json(teams);
 });
 
 app.get('/api/players', (req, res) => {
+  const { team_id } = req.query;
+  if (team_id !== undefined) {
+    const teamId = Number(team_id);
+    if (!Number.isInteger(teamId)) {
+      return res.status(400).json({ error: 'team_id must be an integer.' });
+    }
+    const players = db.prepare('SELECT * FROM players WHERE team_id = ?').all(teamId);
+    return res.json(players);
+  }
+
   const players = db.prepare('SELECT * FROM players').all();
   res.json(players);
+});
+
+app.patch('/api/players/:id/status', requireAuth, (req, res) => {
+  const playerId = Number(req.params.id);
+  if (!Number.isInteger(playerId)) {
+    return res.status(400).json({ error: 'Player id must be an integer.' });
+  }
+
+  const { status } = req.body || {};
+  if (status !== 'available' && status !== 'injured') {
+    return res.status(400).json({ error: "status must be 'available' or 'injured'." });
+  }
+
+  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+  if (!player) {
+    return res.status(404).json({ error: 'Player not found.' });
+  }
+  if (player.team_id !== req.user.team_id) {
+    return res.status(403).json({ error: 'You can only update players on your own team.' });
+  }
+
+  db.prepare('UPDATE players SET status = ? WHERE id = ?').run(status, playerId);
+  const updated = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+  res.json(updated);
 });
 
 app.get('/api/matches', (req, res) => {
@@ -120,6 +189,244 @@ app.post('/api/matches/:id/motm/:candidateId/vote', (req, res) => {
 
   const updated = db.prepare('SELECT * FROM motm_candidates WHERE id = ?').get(candidateId);
   res.json(updated);
+});
+
+app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  if (!match) {
+    return res.status(404).json({ error: 'Match not found.' });
+  }
+
+  const teamId = req.user.team_id;
+  const isHome = match.home_team_id === teamId;
+  const isAway = match.away_team_id === teamId;
+  if (!isHome && !isAway) {
+    return res.status(403).json({ error: 'Your team is not part of this match.' });
+  }
+
+  const { formation, players } = req.body || {};
+  if (typeof formation !== 'string' || !Array.isArray(players) || players.length === 0) {
+    return res
+      .status(400)
+      .json({ error: 'formation (string) and players (non-empty array) are required.' });
+  }
+  for (const p of players) {
+    if (!Number.isInteger(p.playerId) || !Number.isInteger(p.num) || typeof p.pos !== 'string') {
+      return res.status(400).json({ error: 'Each player needs playerId, num, and pos.' });
+    }
+  }
+
+  try {
+    db.exec('BEGIN');
+
+    db.prepare('DELETE FROM match_lineups WHERE match_id = ? AND team_id = ?').run(
+      matchId,
+      teamId
+    );
+
+    const insertLineup = db.prepare(
+      'INSERT INTO match_lineups (match_id, team_id, player_id, num, pos, is_starting) VALUES (?, ?, ?, ?, ?, 1)'
+    );
+    for (const p of players) {
+      insertLineup.run(matchId, teamId, p.playerId, p.num, p.pos);
+    }
+
+    const formationColumn = isHome ? 'home_formation' : 'away_formation';
+    db.prepare(`UPDATE matches SET ${formationColumn} = ? WHERE id = ?`).run(formation, matchId);
+
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  }
+
+  const lineup = db
+    .prepare(
+      `SELECT ml.*, p.name AS player_name
+       FROM match_lineups ml
+       JOIN players p ON p.id = ml.player_id
+       WHERE ml.match_id = ? AND ml.team_id = ?
+       ORDER BY ml.num ASC`
+    )
+    .all(matchId, teamId);
+
+  res.json({ formation, lineup });
+});
+
+app.get('/api/referees', (req, res) => {
+  const referees = db.prepare('SELECT * FROM referees').all();
+  res.json(referees);
+});
+
+app.get('/api/matches/:id/referees', (req, res) => {
+  const matchId = Number(req.params.id);
+  if (!Number.isInteger(matchId)) {
+    return res.status(400).json({ error: 'Match id must be an integer.' });
+  }
+
+  const referees = db
+    .prepare(
+      `SELECT r.*
+       FROM match_referees mr
+       JOIN referees r ON r.id = mr.referee_id
+       WHERE mr.match_id = ?`
+    )
+    .all(matchId);
+  res.json(referees);
+});
+
+app.post('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  const refId = Number(req.params.refId);
+  if (!Number.isInteger(matchId) || !Number.isInteger(refId)) {
+    return res.status(400).json({ error: 'Match id and referee id must be integers.' });
+  }
+
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  if (!match) {
+    return res.status(404).json({ error: 'Match not found.' });
+  }
+  if (match.home_team_id !== req.user.team_id && match.away_team_id !== req.user.team_id) {
+    return res.status(403).json({ error: 'Your team is not part of this match.' });
+  }
+
+  const referee = db.prepare('SELECT * FROM referees WHERE id = ?').get(refId);
+  if (!referee) {
+    return res.status(404).json({ error: 'Referee not found.' });
+  }
+  if (!referee.available) {
+    return res.status(400).json({ error: 'Referee is not available.' });
+  }
+
+  db.prepare('INSERT OR IGNORE INTO match_referees (match_id, referee_id) VALUES (?, ?)').run(
+    matchId,
+    refId
+  );
+
+  const referees = db
+    .prepare(
+      `SELECT r.*
+       FROM match_referees mr
+       JOIN referees r ON r.id = mr.referee_id
+       WHERE mr.match_id = ?`
+    )
+    .all(matchId);
+  res.json(referees);
+});
+
+app.delete('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
+  const matchId = Number(req.params.id);
+  const refId = Number(req.params.refId);
+  if (!Number.isInteger(matchId) || !Number.isInteger(refId)) {
+    return res.status(400).json({ error: 'Match id and referee id must be integers.' });
+  }
+
+  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+  if (!match) {
+    return res.status(404).json({ error: 'Match not found.' });
+  }
+  if (match.home_team_id !== req.user.team_id && match.away_team_id !== req.user.team_id) {
+    return res.status(403).json({ error: 'Your team is not part of this match.' });
+  }
+
+  db.prepare('DELETE FROM match_referees WHERE match_id = ? AND referee_id = ?').run(
+    matchId,
+    refId
+  );
+  res.status(204).end();
+});
+
+app.get('/api/venues', (req, res) => {
+  const venues = db
+    .prepare('SELECT * FROM venues')
+    .all()
+    .map((venue) => ({
+      ...venue,
+      fields: JSON.parse(venue.fields_json),
+      fields_json: undefined,
+    }));
+  res.json(venues);
+});
+
+app.get('/api/friendly-requests', requireAuth, (req, res) => {
+  const teamId = req.user.team_id;
+
+  const requests = db
+    .prepare(
+      `SELECT fr.*, t.name AS team_name, t.division AS team_division
+       FROM friendly_requests fr
+       JOIN teams t ON t.id = fr.team_id
+       WHERE fr.team_id != ?
+       ORDER BY fr.date ASC`
+    )
+    .all(teamId);
+
+  const invitedRequestIds = new Set(
+    db
+      .prepare('SELECT request_id FROM friendly_invites WHERE inviting_team_id = ?')
+      .all(teamId)
+      .map((row) => row.request_id)
+  );
+
+  const withVenue = requests.map((request) => {
+    const venue = request.venue_id
+      ? db.prepare('SELECT * FROM venues WHERE id = ?').get(request.venue_id)
+      : null;
+    return {
+      ...request,
+      venue: venue
+        ? { ...venue, fields: JSON.parse(venue.fields_json), fields_json: undefined }
+        : null,
+      invited: invitedRequestIds.has(request.id),
+    };
+  });
+
+  res.json(withVenue);
+});
+
+app.post('/api/friendly-requests', requireAuth, (req, res) => {
+  const { date, time, venueId } = req.body || {};
+  if (typeof date !== 'string' || typeof time !== 'string') {
+    return res.status(400).json({ error: 'date and time are required.' });
+  }
+  if (venueId !== undefined && venueId !== null && !Number.isInteger(venueId)) {
+    return res.status(400).json({ error: 'venueId must be an integer if provided.' });
+  }
+
+  const result = db
+    .prepare('INSERT INTO friendly_requests (team_id, date, time, venue_id) VALUES (?, ?, ?, ?)')
+    .run(req.user.team_id, date, time, venueId ?? null);
+
+  const created = db
+    .prepare('SELECT * FROM friendly_requests WHERE id = ?')
+    .get(result.lastInsertRowid);
+  res.status(201).json(created);
+});
+
+app.post('/api/friendly-requests/:id/invite', requireAuth, (req, res) => {
+  const requestId = Number(req.params.id);
+  if (!Number.isInteger(requestId)) {
+    return res.status(400).json({ error: 'Request id must be an integer.' });
+  }
+
+  const request = db.prepare('SELECT * FROM friendly_requests WHERE id = ?').get(requestId);
+  if (!request) {
+    return res.status(404).json({ error: 'Friendly request not found.' });
+  }
+  if (request.team_id === req.user.team_id) {
+    return res.status(400).json({ error: 'You cannot invite your own team.' });
+  }
+
+  db.prepare(
+    'INSERT OR IGNORE INTO friendly_invites (request_id, inviting_team_id) VALUES (?, ?)'
+  ).run(requestId, req.user.team_id);
+
+  res.status(201).json({ requestId, invited: true });
 });
 
 app.get('/api/standings', (req, res) => {

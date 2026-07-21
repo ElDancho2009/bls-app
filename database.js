@@ -45,6 +45,14 @@ function addColumnIfMissing(table, column, definition) {
   }
 }
 
+function dropColumnIfExists(table, column) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  const exists = columns.some((col) => col.name === column);
+  if (exists) {
+    db.exec(`ALTER TABLE ${table} DROP COLUMN ${column}`);
+  }
+}
+
 addColumnIfMissing('teams', 'division', 'TEXT');
 
 addColumnIfMissing('matches', 'division', 'TEXT');
@@ -59,8 +67,13 @@ addColumnIfMissing('players', 'yellow_cards', "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing('players', 'red_cards', "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing('players', 'clean_sheets', "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing('players', 'rating', 'INTEGER');
+addColumnIfMissing('players', 'status', "TEXT NOT NULL DEFAULT 'available'");
 
-addColumnIfMissing('matches', 'formation', 'TEXT');
+// A match has one formation per side, not one shared value — replaces the
+// single `formation` column Phase 2 started with.
+dropColumnIfExists('matches', 'formation');
+addColumnIfMissing('matches', 'home_formation', 'TEXT');
+addColumnIfMissing('matches', 'away_formation', 'TEXT');
 
 db.exec("UPDATE matches SET status = 'upcoming' WHERE status = 'scheduled'");
 db.exec("UPDATE matches SET status = 'ft' WHERE status = 'final'");
@@ -117,6 +130,83 @@ db.exec(`
     votes INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (match_id) REFERENCES matches (id),
     FOREIGN KEY (player_id) REFERENCES players (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    team_id INTEGER NOT NULL,
+    role TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS referees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    level TEXT NOT NULL,
+    available INTEGER NOT NULL DEFAULT 1
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS match_referees (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    match_id INTEGER NOT NULL,
+    referee_id INTEGER NOT NULL,
+    FOREIGN KEY (match_id) REFERENCES matches (id),
+    FOREIGN KEY (referee_id) REFERENCES referees (id),
+    UNIQUE (match_id, referee_id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS venues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    borough TEXT NOT NULL,
+    photo TEXT,
+    fields_json TEXT NOT NULL,
+    parking TEXT,
+    cleats TEXT
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS friendly_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    time TEXT NOT NULL,
+    venue_id INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (team_id) REFERENCES teams (id),
+    FOREIGN KEY (venue_id) REFERENCES venues (id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS friendly_invites (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_id INTEGER NOT NULL,
+    inviting_team_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (request_id) REFERENCES friendly_requests (id),
+    FOREIGN KEY (inviting_team_id) REFERENCES teams (id),
+    UNIQUE (request_id, inviting_team_id)
   )
 `);
 

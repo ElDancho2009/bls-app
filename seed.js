@@ -1,5 +1,6 @@
 const db = require('./database.js');
 const { recalculateTeamPoints } = require('./points.js');
+const { hashPassword } = require('./auth.js');
 
 const teams = [
   { name: 'Brooklyn Kickers FC', borough: 'Brooklyn', division: 'queens', points: 0 },
@@ -187,7 +188,8 @@ const matches = [
     competition: 'Queens Division',
     venue: 'Prospect Park Field 3',
     kickoffAt: '2026-07-13T15:00:00',
-    formation: '4-3-3',
+    homeFormation: '4-3-3',
+    awayFormation: '4-3-3',
     lineup: { home: brooklynXI, away: queensXI },
     events: [
       { minute: 8, type: 'goal', side: 'home', player: 'Marcus Reyes', detail: 'Low finish from the edge of the box.' },
@@ -218,7 +220,8 @@ const matches = [
     competition: 'Bronx Division',
     venue: 'Van Cortlandt Park Field 1',
     kickoffAt: '2026-07-13T17:00:00',
-    formation: '4-3-3',
+    homeFormation: '4-3-3',
+    awayFormation: '4-3-3',
     lineup: { home: manhattanXI, away: bronxXI },
     events: [
       { minute: 15, type: 'goal', side: 'home', player: 'Diego Fernandez', detail: 'Volleyed home from a corner.' },
@@ -269,7 +272,8 @@ const matches = [
     competition: 'Queens Division',
     venue: 'Flushing Meadows Pitch B',
     kickoffAt: '2026-07-20T16:00:00',
-    formation: '4-3-3',
+    homeFormation: '4-3-3',
+    awayFormation: '4-3-3',
     lineup: { home: queensXI, away: brooklynXI },
     events: [
       { minute: 19, type: 'goal', side: 'home', player: 'Yusuf Demir', detail: 'First-time finish from a through ball.' },
@@ -289,8 +293,8 @@ const { count: matchCount } = db
 if (matchCount === 0) {
   const insertMatch = db.prepare(
     `INSERT INTO matches
-      (home_team_id, away_team_id, home_score, away_score, status, division, competition, venue, kickoff_at, formation)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (home_team_id, away_team_id, home_score, away_score, status, division, competition, venue, kickoff_at, home_formation, away_formation)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (const match of matches) {
@@ -304,7 +308,8 @@ if (matchCount === 0) {
       match.competition,
       match.venue,
       match.kickoffAt,
-      match.formation ?? null
+      match.homeFormation ?? null,
+      match.awayFormation ?? null
     );
   }
 
@@ -418,6 +423,145 @@ if (motmCount === 0) {
   console.log('Seeded motm_candidates table.');
 } else {
   console.log('motm_candidates table already has data, skipping.');
+}
+
+const coachesByTeam = {
+  'Brooklyn Kickers FC': { email: 'coach@brooklynkickers.com', password: 'password123' },
+  'Queens United SC': { email: 'coach@queensunited.com', password: 'password123' },
+  'Manhattan Strikers FC': { email: 'coach@manhattanstrikers.com', password: 'password123' },
+  'Bronx Rovers FC': { email: 'coach@bronxrovers.com', password: 'password123' },
+};
+
+const { count: userCount } = db.prepare('SELECT COUNT(*) AS count FROM users').get();
+
+if (userCount === 0) {
+  const insertUser = db.prepare(
+    'INSERT INTO users (email, password_hash, team_id, role) VALUES (?, ?, ?, ?)'
+  );
+
+  for (const [teamName, coach] of Object.entries(coachesByTeam)) {
+    insertUser.run(coach.email, hashPassword(coach.password), teamIdByName[teamName], 'coach');
+  }
+
+  console.log('Seeded users table.');
+} else {
+  console.log('Users table already has data, skipping.');
+}
+
+const referees = [
+  { name: 'Marcus Alvarado', level: 'Grade 8', available: 1 },
+  { name: 'Diane Whitfield', level: 'Grade 7', available: 0 },
+  { name: 'Carlos Nguyen', level: 'Grade 8', available: 1 },
+  { name: 'Priya Osei', level: 'Grade 6', available: 0 },
+];
+
+const { count: refereeCount } = db.prepare('SELECT COUNT(*) AS count FROM referees').get();
+
+if (refereeCount === 0) {
+  const insertReferee = db.prepare(
+    'INSERT INTO referees (name, level, available) VALUES (?, ?, ?)'
+  );
+
+  for (const referee of referees) {
+    insertReferee.run(referee.name, referee.level, referee.available);
+  }
+
+  console.log('Seeded referees table.');
+} else {
+  console.log('Referees table already has data, skipping.');
+}
+
+const venues = [
+  {
+    name: 'Flushing Meadows–Corona Park',
+    borough: 'Queens',
+    photo: null,
+    fields: [
+      { name: 'Field 1', surface: 'Turf', note: 'Floodlit, next to the Unisphere' },
+      { name: 'Field 2', surface: 'Grass', note: 'South end near the tennis courts — softer after rain' },
+    ],
+    parking: 'Meadow Lake lot off Meridian Rd — free, fills by 9am on Saturdays.',
+    cleats: 'Turf trainers for Field 1; molded studs for Field 2.',
+  },
+  {
+    name: "Randall's Island",
+    borough: 'Manhattan',
+    photo: null,
+    fields: [
+      { name: 'Field 1', surface: 'Turf', note: 'Icahn Stadium fields, under the Hell Gate Bridge' },
+    ],
+    parking: "Randall's Island lot via the RFK Bridge — metered.",
+    cleats: 'Turf trainers recommended.',
+  },
+  {
+    name: 'Harris Park',
+    borough: 'Queens',
+    photo: null,
+    fields: [
+      { name: 'Field 1', surface: 'Grass', note: 'Open lawn, shared with other pickup games' },
+    ],
+    parking: 'Street parking along the park perimeter.',
+    cleats: 'Firm-ground studs — can get soft after rain.',
+  },
+];
+
+const { count: venueCount } = db.prepare('SELECT COUNT(*) AS count FROM venues').get();
+
+if (venueCount === 0) {
+  const insertVenue = db.prepare(
+    `INSERT INTO venues (name, borough, photo, fields_json, parking, cleats)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  );
+
+  for (const venue of venues) {
+    insertVenue.run(
+      venue.name,
+      venue.borough,
+      venue.photo,
+      JSON.stringify(venue.fields),
+      venue.parking,
+      venue.cleats
+    );
+  }
+
+  console.log('Seeded venues table.');
+} else {
+  console.log('Venues table already has data, skipping.');
+}
+
+const venueIdByName = Object.fromEntries(
+  db
+    .prepare('SELECT id, name FROM venues')
+    .all()
+    .map((row) => [row.name, row.id])
+);
+
+const friendlyRequests = [
+  { team: 'Manhattan Strikers FC', date: '2026-08-01', time: '11:00 AM', venue: 'Flushing Meadows–Corona Park' },
+  { team: 'Bronx Rovers FC', date: '2026-08-08', time: '9:00 AM', venue: "Randall's Island" },
+];
+
+const { count: friendlyRequestCount } = db
+  .prepare('SELECT COUNT(*) AS count FROM friendly_requests')
+  .get();
+
+if (friendlyRequestCount === 0) {
+  const insertRequest = db.prepare(
+    'INSERT INTO friendly_requests (team_id, date, time, venue_id) VALUES (?, ?, ?, ?)'
+  );
+
+  for (const request of friendlyRequests) {
+    insertRequest.run(
+      teamIdByName[request.team],
+      request.date,
+      request.time,
+      venueIdByName[request.venue]
+    );
+  }
+
+  console.log('Seeded friendly_requests table.');
+} else {
+  console.log('friendly_requests table already has data, skipping.');
 }
 
 for (const teamId of Object.values(teamIdByName)) {
