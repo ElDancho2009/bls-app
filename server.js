@@ -32,7 +32,7 @@ app.post('/api/auth/login', (req, res) => {
   const { token } = createSession(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email, teamId: user.team_id, role: user.role },
+    user: { id: user.id, email: user.email, team_id: user.team_id, role: user.role },
   });
 });
 

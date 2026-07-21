@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import MatchesScreen from './screens/MatchesScreen.jsx';
 import MatchCenterScreen from './screens/MatchCenterScreen.jsx';
+import LeaguesScreen from './screens/LeaguesScreen.jsx';
+import CardsScreen from './screens/CardsScreen.jsx';
+import TeamHubScreen from './screens/hub/TeamHubScreen.jsx';
 
 const TABS = [
   { key: 'matches', label: 'Matches' },
@@ -26,11 +29,10 @@ export default function App() {
           <MatchCenterScreen matchId={selectedMatchId} onClose={() => setSelectedMatchId(null)} />
         )}
 
-        {activeTab !== 'matches' && (
-          <div className="placeholder-screen">
-            <p>{TABS.find((tab) => tab.key === activeTab).label} — coming soon</p>
-          </div>
-        )}
+        {activeTab === 'leagues' && <LeaguesScreen />}
+        {activeTab === 'stats' && <CardsScreen />}
+
+        {activeTab === 'hub' && <TeamHubScreen />}
       </div>
 
       {!showMatchCenter && (
