@@ -3,6 +3,7 @@ import { api } from '../api.js';
 import Crest from '../Crest.jsx';
 
 const DIVISIONS = [
+  { key: 'first', label: 'First Division' },
   { key: 'brooklyn', label: 'Brooklyn' },
   { key: 'queens', label: 'Queens' },
   { key: 'bronx', label: 'Bronx' },

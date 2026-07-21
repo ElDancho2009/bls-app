@@ -3,7 +3,20 @@ import { api } from '../api.js';
 import PlayerDetailModal from './PlayerDetailModal.jsx';
 import Crest from '../Crest.jsx';
 
-const DIVISION_LABELS = { queens: 'Queens Division', bronx: 'Bronx Division' };
+const DIVISION_LABELS = {
+  first: 'First Division',
+  brooklyn: 'Brooklyn Division',
+  queens: 'Queens Division',
+  bronx: 'Bronx Division',
+};
+
+const DIVISIONS = [
+  { key: 'all', label: 'All' },
+  { key: 'first', label: 'First Division' },
+  { key: 'brooklyn', label: 'Brooklyn' },
+  { key: 'queens', label: 'Queens' },
+  { key: 'bronx', label: 'Bronx' },
+];
 
 const CATEGORIES = [
   {
@@ -75,6 +88,7 @@ export default function CardsScreen({ onSelectTeam }) {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [division, setDivision] = useState('all');
 
   useEffect(() => {
     Promise.all([api.getPlayers(), api.getTeams(), api.getStandings()])
@@ -101,13 +115,23 @@ export default function CardsScreen({ onSelectTeam }) {
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
   }, [query, players, teamsById]);
 
+  const divisionPlayers = useMemo(() => {
+    if (division === 'all') return players;
+    return players.filter((p) => teamsById[p.team_id]?.division === division);
+  }, [players, teamsById, division]);
+
+  const divisionStandings = useMemo(() => {
+    if (division === 'all') return standings;
+    return standings.filter((s) => s.division === division);
+  }, [standings, division]);
+
   const teamOffense = useMemo(
-    () => [...standings].sort((a, b) => b.gf - a.gf).slice(0, 5),
-    [standings]
+    () => [...divisionStandings].sort((a, b) => b.gf - a.gf).slice(0, 5),
+    [divisionStandings]
   );
   const teamDefense = useMemo(
-    () => [...standings].sort((a, b) => a.ga - b.ga).slice(0, 5),
-    [standings]
+    () => [...divisionStandings].sort((a, b) => a.ga - b.ga).slice(0, 5),
+    [divisionStandings]
   );
 
   if (loading) return <div className="state-message">Loading players…</div>;
@@ -119,8 +143,20 @@ export default function CardsScreen({ onSelectTeam }) {
     <div className="cards-screen">
       <header className="screen-header">
         <div className="brand-title">PLAYERS</div>
-        <div className="screen-subtitle">Stat leaders across both divisions</div>
+        <div className="screen-subtitle">Stat leaders across all divisions</div>
       </header>
+
+      <div className="chip-row">
+        {DIVISIONS.map((d) => (
+          <button
+            key={d.key}
+            className={`chip ${division === d.key ? 'chip-active' : ''}`}
+            onClick={() => setDivision(d.key)}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
 
       <div className="cards-search-row">
         <input
@@ -152,7 +188,7 @@ export default function CardsScreen({ onSelectTeam }) {
       ) : (
         <div className="leaderboard-sections">
           {CATEGORIES.map((cat) => {
-            const rows = players.filter(cat.filter).sort(cat.sort).slice(0, 5);
+            const rows = divisionPlayers.filter(cat.filter).sort(cat.sort).slice(0, 5);
             return (
               <section key={cat.key} className="leaderboard-section">
                 <div className="leaderboard-section-title">{cat.title.toUpperCase()}</div>
