@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../AuthContext.jsx';
 import { api } from '../api.js';
 import Crest from '../Crest.jsx';
 import IgExportModal, { assignToPitch } from './IgExportModal.jsx';
@@ -12,7 +13,12 @@ function votePercentages(items) {
 }
 
 export default function NewsScreen({ onSelectMatch }) {
+  const { user, token } = useAuth();
   const [bulletins, setBulletins] = useState([]);
+  const [newsTitle, setNewsTitle] = useState('');
+  const [newsBody, setNewsBody] = useState('');
+  const [posting, setPosting] = useState(false);
+  const [postError, setPostError] = useState(null);
   const [motw, setMotw] = useState(null);
   const [discipline, setDiscipline] = useState({ suspended: [], dangerZone: [] });
   const [gotw, setGotw] = useState([]);
@@ -66,6 +72,22 @@ export default function NewsScreen({ onSelectMatch }) {
     api.getTotw().then(setTotw);
   }
 
+  async function handlePublish() {
+    if (!newsTitle.trim() || !newsBody.trim()) return;
+    setPosting(true);
+    setPostError(null);
+    try {
+      const created = await api.postNews({ title: newsTitle, body: newsBody }, token);
+      setBulletins((prev) => [created, ...prev]);
+      setNewsTitle('');
+      setNewsBody('');
+    } catch (err) {
+      setPostError(err.message);
+    } finally {
+      setPosting(false);
+    }
+  }
+
   if (loading) return <div className="state-message">Loading news…</div>;
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
 
@@ -79,6 +101,35 @@ export default function NewsScreen({ onSelectMatch }) {
         <div className="brand-title">NEWS</div>
         <div className="screen-subtitle">Highlights, votes &amp; the team of the week</div>
       </header>
+
+      {user?.role === 'league_director' && (
+        <div className="bulletin-card">
+          <span className="bulletin-badge">PUBLISH ANNOUNCEMENT</span>
+          <input
+            className="ref-sheet-pin-input"
+            style={{ width: '100%', letterSpacing: 'normal', fontSize: '1rem' }}
+            placeholder="Title"
+            value={newsTitle}
+            onChange={(e) => setNewsTitle(e.target.value)}
+          />
+          <textarea
+            className="bulletin-body"
+            style={{ width: '100%', marginTop: '0.5rem' }}
+            placeholder="Announcement body…"
+            value={newsBody}
+            onChange={(e) => setNewsBody(e.target.value)}
+            rows={3}
+          />
+          {postError && <div className="state-message error">{postError}</div>}
+          <button
+            className="ig-export-button"
+            onClick={handlePublish}
+            disabled={posting || !newsTitle.trim() || !newsBody.trim()}
+          >
+            {posting ? 'Publishing…' : 'Publish Announcement'}
+          </button>
+        </div>
+      )}
 
       {bulletins.length > 0 && (
         <div className="bulletin-list">

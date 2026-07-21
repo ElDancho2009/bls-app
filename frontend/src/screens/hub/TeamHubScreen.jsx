@@ -8,8 +8,9 @@ import SquadScreen from './SquadScreen.jsx';
 import MatchmakerScreen from './MatchmakerScreen.jsx';
 import RefereesScreen from './RefereesScreen.jsx';
 import CheckinScreen from './CheckinScreen.jsx';
+import VerifyPlayersScreen from './VerifyPlayersScreen.jsx';
 
-const HUB_TABS = [
+const COACH_TABS = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'lineup', label: 'Lineup' },
   { key: 'squad', label: 'Squad' },
@@ -18,43 +19,63 @@ const HUB_TABS = [
   { key: 'checkin', label: 'Check-in' },
 ];
 
+const DIRECTOR_TABS = [{ key: 'verify', label: 'Verify Players' }];
+
 export default function TeamHubScreen() {
   const { user, team, loading, logout } = useAuth();
-  const [hubScreen, setHubScreen] = useState('dashboard');
+  const [hubScreen, setHubScreen] = useState(null);
 
   if (loading) return <div className="state-message">Loading…</div>;
   if (!user) return <SignInScreen />;
+
+  const isCoach = user.role === 'coach_manager';
+  const isDirector = user.role === 'league_director';
+  const tabs = isCoach ? COACH_TABS : isDirector ? DIRECTOR_TABS : [];
+  const activeScreen = hubScreen ?? tabs[0]?.key ?? null;
 
   return (
     <div className="hub-screen">
       <div className="hub-topbar">
         <div className="hub-topbar-identity">
-          <Crest src={team?.logo_url} size={32} />
-          <div className="hub-team-name">{team?.name.toUpperCase()} · HUB</div>
+          {isCoach && <Crest src={team?.logo_url} size={32} />}
+          <div className="hub-team-name">
+            {isCoach ? `${team?.name.toUpperCase()} · HUB` : user.email.toUpperCase()}
+          </div>
         </div>
         <button className="hub-signout" onClick={logout}>
           Sign Out
         </button>
       </div>
 
-      <div className="chip-row hub-tab-row">
-        {HUB_TABS.map((t) => (
-          <button
-            key={t.key}
-            className={`chip ${hubScreen === t.key ? 'chip-active' : ''}`}
-            onClick={() => setHubScreen(t.key)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {tabs.length > 0 && (
+        <div className="chip-row hub-tab-row">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              className={`chip ${activeScreen === t.key ? 'chip-active' : ''}`}
+              onClick={() => setHubScreen(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {hubScreen === 'dashboard' && <DashboardScreen onNavigate={setHubScreen} />}
-      {hubScreen === 'lineup' && <LineupBuilderScreen />}
-      {hubScreen === 'squad' && <SquadScreen />}
-      {hubScreen === 'matchmaker' && <MatchmakerScreen />}
-      {hubScreen === 'referees' && <RefereesScreen />}
-      {hubScreen === 'checkin' && <CheckinScreen />}
+      {isCoach && activeScreen === 'dashboard' && <DashboardScreen onNavigate={setHubScreen} />}
+      {isCoach && activeScreen === 'lineup' && <LineupBuilderScreen />}
+      {isCoach && activeScreen === 'squad' && <SquadScreen />}
+      {isCoach && activeScreen === 'matchmaker' && <MatchmakerScreen />}
+      {isCoach && activeScreen === 'referees' && <RefereesScreen />}
+      {isCoach && activeScreen === 'checkin' && <CheckinScreen />}
+
+      {isDirector && activeScreen === 'verify' && <VerifyPlayersScreen />}
+
+      {user.role === 'referee' && (
+        <div className="state-message">
+          Signed in as referee. Go to Matches, open a match you're assigned to, and use Referee
+          Sign-Off to submit the match sheet.
+        </div>
+      )}
     </div>
   );
 }

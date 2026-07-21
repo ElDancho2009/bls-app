@@ -35,6 +35,8 @@ export const api = {
 
   patchPlayerStatus: (playerId, status, token) =>
     request(`/players/${playerId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }, token),
+  verifyPlayer: (playerId, verified, token) =>
+    request(`/players/${playerId}/verify`, { method: 'PUT', body: JSON.stringify({ verified }) }, token),
 
   putMatchLineup: (matchId, body, token) =>
     request(`/matches/${matchId}/lineup`, { method: 'PUT', body: JSON.stringify(body) }, token),
@@ -44,16 +46,12 @@ export const api = {
     request(`/matches/${matchId}/checkins/${playerId}`, { method: 'POST' }, token),
   getPitchSheet: (matchId, token) => request(`/matches/${matchId}/pitch-sheet`, {}, token),
 
-  verifyRefSheetPin: (matchId, pin) =>
-    request(`/matches/${matchId}/ref-sheet/verify-pin`, {
-      method: 'POST',
-      body: JSON.stringify({ pin }),
-    }),
-  submitRefSheet: (matchId, { pin, motmPlayerId }) =>
-    request(`/matches/${matchId}/ref-sheet/submit`, {
-      method: 'POST',
-      body: JSON.stringify({ pin, motmPlayerId }),
-    }),
+  submitSignoff: (matchId, { pin, motmPlayerId }, token) =>
+    request(
+      `/matches/${matchId}/signoff`,
+      { method: 'POST', body: JSON.stringify({ pin, motmPlayerId }) },
+      token
+    ),
 
   getReferees: () => request('/referees'),
   getMatchReferees: (matchId) => request(`/matches/${matchId}/referees`),
@@ -65,6 +63,8 @@ export const api = {
   getVenues: () => request('/venues'),
 
   getBulletins: () => request('/bulletins'),
+  postNews: ({ title, body }, token) =>
+    request('/news', { method: 'POST', body: JSON.stringify({ title, body }) }, token),
   getMatchOfWeek: () => request('/matches/motw'),
   getDiscipline: () => request('/discipline'),
 

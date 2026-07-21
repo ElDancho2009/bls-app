@@ -32,7 +32,8 @@ export default function LineupBuilderScreen() {
 
     async function load() {
       try {
-        const [matches, players] = await Promise.all([api.getMatches(), api.getPlayers(team.id)]);
+        const [matches, allPlayers] = await Promise.all([api.getMatches(), api.getPlayers(team.id)]);
+        const players = allPlayers.filter((p) => p.verified);
         const next = matches
           .filter(
             (m) =>

@@ -50,7 +50,10 @@ function PlayerLeaderRow({ rank, player, team, value, valueLabel, onClick }) {
     <button className="leaderboard-row" onClick={onClick}>
       <div className="leaderboard-rank">{rank}</div>
       <div className="leaderboard-info">
-        <div className="leaderboard-name">{player.name}</div>
+        <div className="leaderboard-name">
+          {player.name}
+          {!player.verified && <span className="bulletin-badge">UNVERIFIED</span>}
+        </div>
         <div className="leaderboard-team">
           {team?.name} · {player.position}
         </div>
