@@ -19,6 +19,39 @@ for (const team of teams) {
 
 console.log('Seeded teams table.');
 
+function crestInitials(name) {
+  const words = name.replace(/\bFC\b|\bSC\b/g, '').trim().split(/\s+/);
+  return words
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+function crestDataUri(name) {
+  let hash = 0;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) & 0xffffffff;
+  const hue = Math.abs(hash) % 360;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+    <circle cx="32" cy="32" r="32" fill="hsl(${hue} 55% 38%)" />
+    <text x="32" y="32" font-family="sans-serif" font-weight="700" font-size="22"
+      fill="#fff" text-anchor="middle" dominant-baseline="central">${crestInitials(name)}</text>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const teamsMissingCrest = db
+  .prepare('SELECT id, name FROM teams WHERE logo_url IS NULL')
+  .all();
+
+if (teamsMissingCrest.length > 0) {
+  const updateCrest = db.prepare('UPDATE teams SET logo_url = ? WHERE id = ?');
+  for (const team of teamsMissingCrest) {
+    updateCrest.run(crestDataUri(team.name), team.id);
+  }
+  console.log(`Generated placeholder crests for ${teamsMissingCrest.length} team(s).`);
+}
+
 const teamIdByName = Object.fromEntries(
   db
     .prepare('SELECT id, name FROM teams')

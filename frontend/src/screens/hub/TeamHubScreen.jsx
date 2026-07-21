@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
+import Crest from '../../Crest.jsx';
 import SignInScreen from './SignInScreen.jsx';
 import DashboardScreen from './DashboardScreen.jsx';
 import LineupBuilderScreen from './LineupBuilderScreen.jsx';
@@ -25,7 +26,10 @@ export default function TeamHubScreen() {
   return (
     <div className="hub-screen">
       <div className="hub-topbar">
-        <div className="hub-team-name">{team?.name.toUpperCase()} · HUB</div>
+        <div className="hub-topbar-identity">
+          <Crest src={team?.logo_url} size={32} />
+          <div className="hub-team-name">{team?.name.toUpperCase()} · HUB</div>
+        </div>
         <button className="hub-signout" onClick={logout}>
           Sign Out
         </button>

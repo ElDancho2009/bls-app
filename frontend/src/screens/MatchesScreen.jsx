@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Crest from '../Crest.jsx';
 
 const DIVISIONS = [
   { key: 'all', label: 'All' },
@@ -33,16 +34,18 @@ function statusLabel(match) {
 export default function MatchesScreen({ onSelectMatch }) {
   const [teams, setTeams] = useState([]);
   const [matches, setMatches] = useState([]);
+  const [clips, setClips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [division, setDivision] = useState('all');
   const [dayOffset, setDayOffset] = useState(0);
 
   useEffect(() => {
-    Promise.all([api.getTeams(), api.getMatches()])
-      .then(([teamsData, matchesData]) => {
+    Promise.all([api.getTeams(), api.getMatches(), api.getClips()])
+      .then(([teamsData, matchesData, clipsData]) => {
         setTeams(teamsData);
         setMatches(matchesData);
+        setClips(clipsData);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -68,10 +71,35 @@ export default function MatchesScreen({ onSelectMatch }) {
 
   return (
     <div className="matches-screen">
-      <header className="screen-header">
-        <div className="brand-title">BOROUGH LEAGUE</div>
-        <div className="brand-subtitle">SOCCER</div>
+      <header className="screen-header brand-header">
+        <div className="brand-mark" aria-hidden="true">BLS</div>
+        <div>
+          <div className="brand-title">BOROUGH LEAGUE</div>
+          <div className="brand-subtitle">SOCCER</div>
+        </div>
       </header>
+
+      {clips.length > 0 && (
+        <div className="featured-clips">
+          <div className="leaderboard-section-title">FEATURED CLIPS</div>
+          <div className="featured-clips-row">
+            {clips.map((clip) => (
+              <button
+                key={clip.id}
+                className="featured-clip-card"
+                onClick={() => onSelectMatch(clip.match_id)}
+              >
+                <div className="featured-clip-thumb">
+                  <span className="clip-tag-badge">{clip.tag}</span>
+                  <span className="clip-minute-badge">{clip.minute}'</span>
+                </div>
+                <div className="featured-clip-title">{clip.title}</div>
+                <div className="featured-clip-meta">{clip.views_count.toLocaleString()} views</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="chip-row">
         {DIVISIONS.map((d) => (
@@ -114,12 +142,18 @@ export default function MatchesScreen({ onSelectMatch }) {
               className={`fixture-row ${match.status === 'live' ? 'fixture-live' : ''}`}
               onClick={() => onSelectMatch(match.id)}
             >
-              <div className="fixture-team">{home?.name}</div>
+              <div className="fixture-team">
+                <Crest src={home?.logo_url} />
+                <span>{home?.name}</span>
+              </div>
               <div className="fixture-center">
                 <div className="fixture-score">{scoreText}</div>
                 <div className="fixture-status">{statusLabel(match)}</div>
               </div>
-              <div className="fixture-team fixture-team-away">{away?.name}</div>
+              <div className="fixture-team fixture-team-away">
+                <span>{away?.name}</span>
+                <Crest src={away?.logo_url} />
+              </div>
             </button>
           );
         })}

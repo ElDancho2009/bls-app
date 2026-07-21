@@ -95,6 +95,21 @@ app.get('/api/matches', (req, res) => {
   res.json(matches);
 });
 
+app.get('/api/clips', (req, res) => {
+  const limit = Math.min(Number(req.query.limit) || 6, 20);
+  const clips = db
+    .prepare(
+      `SELECT mc.id, mc.match_id, mc.minute, mc.title, mc.views_count, mc.tag,
+              t.name AS team_name, t.logo_url AS team_logo_url
+       FROM match_clips mc
+       JOIN teams t ON t.id = mc.team_id
+       ORDER BY mc.views_count DESC
+       LIMIT ?`
+    )
+    .all(limit);
+  res.json(clips);
+});
+
 function recentForm(teamId, excludeMatchId) {
   const rows = db
     .prepare(
@@ -446,7 +461,7 @@ app.get('/api/standings', (req, res) => {
          WHERE status = 'ft' AND (division IS NULL OR division != 'cross')
        )
        SELECT
-         t.id, t.name, t.division,
+         t.id, t.name, t.division, t.logo_url,
          COUNT(tm.team_id) AS gp,
          COALESCE(SUM(CASE WHEN tm.gf > tm.ga THEN 1 ELSE 0 END), 0) AS w,
          COALESCE(SUM(CASE WHEN tm.gf < tm.ga THEN 1 ELSE 0 END), 0) AS l,

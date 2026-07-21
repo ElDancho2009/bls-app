@@ -21,6 +21,7 @@ async function request(path, options = {}, token) {
 export const api = {
   getTeams: () => request('/teams'),
   getMatches: () => request('/matches'),
+  getClips: (limit) => request(`/clips${limit ? `?limit=${limit}` : ''}`),
   getMatch: (id) => request(`/matches/${id}`),
   voteMotm: (matchId, candidateId) =>
     request(`/matches/${matchId}/motm/${candidateId}/vote`, { method: 'POST' }),

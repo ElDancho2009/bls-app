@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Crest from '../Crest.jsx';
 
 const DIVISIONS = [
   { key: 'queens', label: 'Queens' },
@@ -55,7 +56,10 @@ export default function LeaguesScreen() {
           {standings.map((row, i) => (
             <div key={row.id} className="standings-row">
               <div className="standings-rank">{i + 1}</div>
-              <div className="standings-name">{row.name}</div>
+              <div className="standings-name">
+                <Crest src={row.logo_url} size={22} />
+                <span>{row.name}</span>
+              </div>
               <div className="standings-cell">{row.gp}</div>
               <div className={`standings-cell ${row.gd > 0 ? 'gd-pos' : row.gd < 0 ? 'gd-neg' : ''}`}>
                 {row.gd > 0 ? `+${row.gd}` : row.gd}

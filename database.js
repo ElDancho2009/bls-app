@@ -54,6 +54,7 @@ function dropColumnIfExists(table, column) {
 }
 
 addColumnIfMissing('teams', 'division', 'TEXT');
+addColumnIfMissing('teams', 'logo_url', 'TEXT');
 
 addColumnIfMissing('matches', 'division', 'TEXT');
 addColumnIfMissing('matches', 'competition', 'TEXT');

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import PlayerDetailModal from './PlayerDetailModal.jsx';
+import Crest from '../Crest.jsx';
+
+const DIVISION_LABELS = { queens: 'Queens Division', bronx: 'Bronx Division' };
 
 const CATEGORIES = [
   {
@@ -51,9 +54,10 @@ function TeamLeaderRow({ rank, team, value, valueLabel }) {
   return (
     <div className="leaderboard-row team-leaderboard-row">
       <div className="leaderboard-rank">{rank}</div>
+      <Crest src={team.logo_url} />
       <div className="leaderboard-info">
         <div className="leaderboard-name">{team.name}</div>
-        <div className="leaderboard-team">{team.division}</div>
+        <div className="leaderboard-team">{DIVISION_LABELS[team.division] ?? team.division}</div>
       </div>
       <div className="leaderboard-value">
         <div className="leaderboard-value-num">{value}</div>
@@ -106,7 +110,7 @@ export default function CardsScreen() {
     [standings]
   );
 
-  if (loading) return <div className="state-message">Loading player cards…</div>;
+  if (loading) return <div className="state-message">Loading players…</div>;
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
 
   const showSearch = query.trim().length > 0;
@@ -114,8 +118,8 @@ export default function CardsScreen() {
   return (
     <div className="cards-screen">
       <header className="screen-header">
-        <div className="brand-title">PLAYER CARDS</div>
-        <div className="screen-subtitle">Stat leaders across the league</div>
+        <div className="brand-title">PLAYERS</div>
+        <div className="screen-subtitle">Stat leaders across both divisions</div>
       </header>
 
       <div className="cards-search-row">
@@ -171,7 +175,7 @@ export default function CardsScreen() {
           })}
 
           <section className="leaderboard-section">
-            <div className="leaderboard-section-title">TEAM OFFENSE</div>
+            <div className="leaderboard-section-title">BEST ATTACK</div>
             <div className="leaderboard-list">
               {teamOffense.map((row, i) => (
                 <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.gf} valueLabel="GF" />
@@ -180,7 +184,7 @@ export default function CardsScreen() {
           </section>
 
           <section className="leaderboard-section">
-            <div className="leaderboard-section-title">TEAM DEFENSE</div>
+            <div className="leaderboard-section-title">BEST DEFENSE</div>
             <div className="leaderboard-list">
               {teamDefense.map((row, i) => (
                 <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.ga} valueLabel="GA" />
