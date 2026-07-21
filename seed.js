@@ -799,12 +799,28 @@ if (userCount === 0) {
 
   for (const team of teams) {
     const email = `coach@${coachSlug(team.name)}.com`;
-    insertUser.run(email, hashPassword('password123'), teamIdByName[team.name], 'coach');
+    insertUser.run(email, hashPassword('password123'), teamIdByName[team.name], 'coach_manager');
   }
 
   console.log('Seeded users table.');
 } else {
   console.log('Users table already has data, skipping.');
+}
+
+const { count: directorCount } = db
+  .prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'league_director'")
+  .get();
+
+if (directorCount === 0) {
+  db.prepare('INSERT INTO users (email, password_hash, team_id, role) VALUES (?, ?, ?, ?)').run(
+    'director@blsleague.com',
+    hashPassword('password123'),
+    null,
+    'league_director'
+  );
+  console.log('Seeded league_director account.');
+} else {
+  console.log('league_director account already exists, skipping.');
 }
 
 const referees = [
@@ -828,6 +844,28 @@ if (refereeCount === 0) {
   console.log('Seeded referees table.');
 } else {
   console.log('Referees table already has data, skipping.');
+}
+
+function refereeSlug(name) {
+  return name.replace(/[^a-zA-Z]/g, '').toLowerCase();
+}
+
+const { count: refereeUserCount } = db
+  .prepare("SELECT COUNT(*) AS count FROM users WHERE role = 'referee'")
+  .get();
+
+if (refereeUserCount === 0) {
+  const insertRefUser = db.prepare(
+    'INSERT INTO users (email, password_hash, team_id, role, referee_id) VALUES (?, ?, ?, ?, ?)'
+  );
+  const refereeRows = db.prepare('SELECT id, name FROM referees').all();
+  for (const referee of refereeRows) {
+    const email = `${refereeSlug(referee.name)}@blsreferees.com`;
+    insertRefUser.run(email, hashPassword('password123'), null, 'referee', referee.id);
+  }
+  console.log('Seeded referee login accounts.');
+} else {
+  console.log('Referee login accounts already exist, skipping.');
 }
 
 const venues = [

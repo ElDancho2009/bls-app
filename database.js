@@ -72,6 +72,7 @@ addColumnIfMissing('players', 'red_cards', "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing('players', 'clean_sheets', "INTEGER NOT NULL DEFAULT 0");
 addColumnIfMissing('players', 'rating', 'INTEGER');
 addColumnIfMissing('players', 'status', "TEXT NOT NULL DEFAULT 'available'");
+addColumnIfMissing('players', 'verified', 'INTEGER NOT NULL DEFAULT 0');
 
 // A match has one formation per side, not one shared value — replaces the
 // single `formation` column Phase 2 started with.
@@ -168,6 +169,51 @@ db.exec(`
   )
 `);
 
+// team_id was originally NOT NULL (every user was a team coach). referee and
+// league_director accounts aren't tied to a team, so it has to become
+// nullable. SQLite can't ALTER a column's NOT NULL constraint in place, so
+// rebuild the table — this only does anything the first time it runs.
+function migrateUsersTeamIdNullable() {
+  const teamIdCol = db
+    .prepare('PRAGMA table_info(users)')
+    .all()
+    .find((col) => col.name === 'team_id');
+  if (!teamIdCol || teamIdCol.notnull === 0) return;
+
+  db.exec('PRAGMA foreign_keys = OFF');
+  try {
+    db.exec('BEGIN');
+    db.exec(`
+      CREATE TABLE users_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        team_id INTEGER,
+        role TEXT NOT NULL,
+        FOREIGN KEY (team_id) REFERENCES teams (id)
+      )
+    `);
+    db.exec(
+      'INSERT INTO users_new (id, email, password_hash, team_id, role) SELECT id, email, password_hash, team_id, role FROM users'
+    );
+    db.exec('DROP TABLE users');
+    db.exec('ALTER TABLE users_new RENAME TO users');
+    db.exec('COMMIT');
+  } catch (err) {
+    db.exec('ROLLBACK');
+    throw err;
+  } finally {
+    db.exec('PRAGMA foreign_keys = ON');
+  }
+}
+migrateUsersTeamIdNullable();
+
+addColumnIfMissing('users', 'referee_id', 'INTEGER REFERENCES referees(id)');
+
+// RBAC renamed the coach role to coach_manager; fold in any rows seeded
+// under the old name.
+db.exec("UPDATE users SET role = 'coach_manager' WHERE role = 'coach'");
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (
     token TEXT PRIMARY KEY,
@@ -245,6 +291,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
+
+addColumnIfMissing('bulletins', 'author_id', 'INTEGER REFERENCES users(id)');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS friendly_invites (

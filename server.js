@@ -7,12 +7,19 @@ const {
   createSession,
   destroySession,
   requireAuth,
+  requireRole,
 } = require('./auth.js');
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+// A league_director can act on any team's resources; everyone else must own
+// the resource (team_id) they're trying to modify.
+function ownsOrOverrides(req, ownerTeamId) {
+  return req.user.role === 'league_director' || req.user.team_id === ownerTeamId;
+}
 
 app.get('/', (req, res) => {
   res.send('BLS App Engine is Live! ');
@@ -32,7 +39,13 @@ app.post('/api/auth/login', (req, res) => {
   const { token } = createSession(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email, team_id: user.team_id, role: user.role },
+    user: {
+      id: user.id,
+      email: user.email,
+      team_id: user.team_id,
+      role: user.role,
+      referee_id: user.referee_id,
+    },
   });
 });
 
@@ -145,29 +158,60 @@ app.get('/api/players', (req, res) => {
   res.json(players);
 });
 
-app.patch('/api/players/:id/status', requireAuth, (req, res) => {
-  const playerId = Number(req.params.id);
-  if (!Number.isInteger(playerId)) {
-    return res.status(400).json({ error: 'Player id must be an integer.' });
-  }
+app.patch(
+  '/api/players/:id/status',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
+    const playerId = Number(req.params.id);
+    if (!Number.isInteger(playerId)) {
+      return res.status(400).json({ error: 'Player id must be an integer.' });
+    }
 
-  const { status } = req.body || {};
-  if (status !== 'available' && status !== 'injured') {
-    return res.status(400).json({ error: "status must be 'available' or 'injured'." });
-  }
+    const { status } = req.body || {};
+    if (status !== 'available' && status !== 'injured') {
+      return res.status(400).json({ error: "status must be 'available' or 'injured'." });
+    }
 
-  const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
-  if (!player) {
-    return res.status(404).json({ error: 'Player not found.' });
-  }
-  if (player.team_id !== req.user.team_id) {
-    return res.status(403).json({ error: 'You can only update players on your own team.' });
-  }
+    const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+    if (!player) {
+      return res.status(404).json({ error: 'Player not found.' });
+    }
+    if (!ownsOrOverrides(req, player.team_id)) {
+      return res.status(403).json({ error: 'You can only update players on your own team.' });
+    }
 
-  db.prepare('UPDATE players SET status = ? WHERE id = ?').run(status, playerId);
-  const updated = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
-  res.json(updated);
-});
+    db.prepare('UPDATE players SET status = ? WHERE id = ?').run(status, playerId);
+    const updated = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+    res.json(updated);
+  }
+);
+
+app.put(
+  '/api/players/:id/verify',
+  requireAuth,
+  requireRole('league_director'),
+  (req, res) => {
+    const playerId = Number(req.params.id);
+    if (!Number.isInteger(playerId)) {
+      return res.status(400).json({ error: 'Player id must be an integer.' });
+    }
+
+    const { verified } = req.body || {};
+    if (typeof verified !== 'boolean') {
+      return res.status(400).json({ error: 'verified must be a boolean.' });
+    }
+
+    const player = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+    if (!player) {
+      return res.status(404).json({ error: 'Player not found.' });
+    }
+
+    db.prepare('UPDATE players SET verified = ? WHERE id = ?').run(verified ? 1 : 0, playerId);
+    const updated = db.prepare('SELECT * FROM players WHERE id = ?').get(playerId);
+    res.json(updated);
+  }
+);
 
 app.get('/api/matches', (req, res) => {
   const matches = db.prepare('SELECT * FROM matches').all();
@@ -177,6 +221,20 @@ app.get('/api/matches', (req, res) => {
 app.get('/api/bulletins', (req, res) => {
   const bulletins = db.prepare('SELECT * FROM bulletins ORDER BY created_at DESC').all();
   res.json(bulletins);
+});
+
+app.post('/api/news', requireAuth, requireRole('league_director'), (req, res) => {
+  const { title, body } = req.body || {};
+  if (typeof title !== 'string' || !title.trim() || typeof body !== 'string' || !body.trim()) {
+    return res.status(400).json({ error: 'title and body are required.' });
+  }
+
+  const result = db
+    .prepare('INSERT INTO bulletins (title, body, author_id) VALUES (?, ?, ?)')
+    .run(title, body, req.user.id);
+
+  const created = db.prepare('SELECT * FROM bulletins WHERE id = ?').get(result.lastInsertRowid);
+  res.status(201).json(created);
 });
 
 app.get('/api/discipline', (req, res) => {
@@ -471,47 +529,55 @@ function refereePinIsValid(matchId, pin) {
   return !!match;
 }
 
-app.post('/api/matches/:id/ref-sheet/verify-pin', (req, res) => {
-  const matchId = Number(req.params.id);
-  if (!Number.isInteger(matchId)) {
-    return res.status(400).json({ error: 'Match id must be an integer.' });
-  }
+// Login proves who a referee is (role='referee', linked via referee_id);
+// the match PIN proves they're the one actually on the pitch for this
+// specific fixture. league_director skips both checks (admin override).
+app.post(
+  '/api/matches/:id/signoff',
+  requireAuth,
+  requireRole('referee', 'league_director'),
+  (req, res) => {
+    const matchId = Number(req.params.id);
+    if (!Number.isInteger(matchId)) {
+      return res.status(400).json({ error: 'Match id must be an integer.' });
+    }
 
-  const { pin } = req.body || {};
-  res.json({ valid: refereePinIsValid(matchId, pin) });
-});
+    const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+    if (!match) {
+      return res.status(404).json({ error: 'Match not found.' });
+    }
+    if (match.ref_sheet_submitted_at) {
+      return res.status(400).json({ error: 'This match sheet has already been submitted.' });
+    }
 
-app.post('/api/matches/:id/ref-sheet/submit', (req, res) => {
-  const matchId = Number(req.params.id);
-  if (!Number.isInteger(matchId)) {
-    return res.status(400).json({ error: 'Match id must be an integer.' });
-  }
+    const { pin, motmPlayerId } = req.body || {};
 
-  const match = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
-  if (!match) {
-    return res.status(404).json({ error: 'Match not found.' });
-  }
-  if (match.ref_sheet_submitted_at) {
-    return res.status(400).json({ error: 'This match sheet has already been submitted.' });
-  }
+    if (req.user.role === 'referee') {
+      const assigned = db
+        .prepare('SELECT 1 FROM match_referees WHERE match_id = ? AND referee_id = ?')
+        .get(matchId, req.user.referee_id);
+      if (!assigned) {
+        return res.status(403).json({ error: 'You are not assigned to referee this match.' });
+      }
+      if (!refereePinIsValid(matchId, pin)) {
+        return res.status(403).json({ error: 'Invalid referee PIN for this match.' });
+      }
+    }
 
-  const { pin, motmPlayerId } = req.body || {};
-  if (!refereePinIsValid(matchId, pin)) {
-    return res.status(403).json({ error: 'Invalid referee PIN for this match.' });
-  }
-  if (!Number.isInteger(motmPlayerId)) {
-    return res.status(400).json({ error: 'motmPlayerId is required.' });
-  }
+    if (!Number.isInteger(motmPlayerId)) {
+      return res.status(400).json({ error: 'motmPlayerId is required.' });
+    }
 
-  db.prepare(
-    `UPDATE matches
-     SET ref_sheet_submitted_at = datetime('now'), official_motm_player_id = ?
-     WHERE id = ?`
-  ).run(motmPlayerId, matchId);
+    db.prepare(
+      `UPDATE matches
+       SET ref_sheet_submitted_at = datetime('now'), official_motm_player_id = ?
+       WHERE id = ?`
+    ).run(motmPlayerId, matchId);
 
-  const updated = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
-  res.json(updated);
-});
+    const updated = db.prepare('SELECT * FROM matches WHERE id = ?').get(matchId);
+    res.json(updated);
+  }
+);
 
 app.post('/api/matches/:id/motm/:candidateId/vote', (req, res) => {
   const matchId = Number(req.params.id);
@@ -533,7 +599,11 @@ app.post('/api/matches/:id/motm/:candidateId/vote', (req, res) => {
   res.json(updated);
 });
 
-app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
+app.put(
+  '/api/matches/:id/lineup',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
   const matchId = Number(req.params.id);
   if (!Number.isInteger(matchId)) {
     return res.status(400).json({ error: 'Match id must be an integer.' });
@@ -544,7 +614,19 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'Match not found.' });
   }
 
-  const teamId = req.user.team_id;
+  // A director isn't tied to a team, so they must say which side of the
+  // match they're setting the lineup for; a coach_manager always acts on
+  // their own team.
+  let teamId;
+  if (req.user.role === 'league_director') {
+    teamId = Number(req.body?.teamId);
+    if (!Number.isInteger(teamId)) {
+      return res.status(400).json({ error: 'teamId is required for league_director lineup submissions.' });
+    }
+  } else {
+    teamId = req.user.team_id;
+  }
+
   const isHome = match.home_team_id === teamId;
   const isAway = match.away_team_id === teamId;
   if (!isHome && !isAway) {
@@ -564,6 +646,19 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
   }
   if (bench !== undefined && !Array.isArray(bench)) {
     return res.status(400).json({ error: 'bench must be an array of player ids if provided.' });
+  }
+
+  const selectedPlayerIds = [...players.map((p) => p.playerId), ...(bench ?? [])];
+  const unverified = db
+    .prepare(
+      `SELECT id FROM players WHERE verified = 0 AND id IN (${selectedPlayerIds.map(() => '?').join(',')})`
+    )
+    .all(...selectedPlayerIds);
+  if (unverified.length > 0) {
+    return res.status(400).json({
+      error: 'Lineup includes unverified players.',
+      playerIds: unverified.map((p) => p.id),
+    });
   }
 
   try {
@@ -613,7 +708,8 @@ app.put('/api/matches/:id/lineup', requireAuth, (req, res) => {
     .all(matchId, teamId);
 
   res.json({ formation, lineup });
-});
+  }
+);
 
 function checkinBadge(player) {
   if (player.status === 'injured') {
@@ -669,7 +765,11 @@ app.get('/api/matches/:id/checkins', requireAuth, (req, res) => {
   );
 });
 
-app.post('/api/matches/:id/checkins/:playerId', requireAuth, (req, res) => {
+app.post(
+  '/api/matches/:id/checkins/:playerId',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
   const matchId = Number(req.params.id);
   const playerId = Number(req.params.playerId);
   if (!Number.isInteger(matchId) || !Number.isInteger(playerId)) {
@@ -680,7 +780,7 @@ app.post('/api/matches/:id/checkins/:playerId', requireAuth, (req, res) => {
   if (!player) {
     return res.status(404).json({ error: 'Player not found.' });
   }
-  if (player.team_id !== req.user.team_id) {
+  if (!ownsOrOverrides(req, player.team_id)) {
     return res.status(403).json({ error: 'You can only check in players on your own team.' });
   }
 
@@ -695,7 +795,8 @@ app.post('/api/matches/:id/checkins/:playerId', requireAuth, (req, res) => {
   ).run(matchId, playerId, nextValue);
 
   res.json({ playerId, checkedIn: !!nextValue });
-});
+  }
+);
 
 app.get('/api/matches/:id/pitch-sheet', requireAuth, (req, res) => {
   const matchId = Number(req.params.id);
@@ -766,7 +867,11 @@ app.get('/api/matches/:id/referees', (req, res) => {
   res.json(referees);
 });
 
-app.post('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
+app.post(
+  '/api/matches/:id/referees/:refId',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
   const matchId = Number(req.params.id);
   const refId = Number(req.params.refId);
   if (!Number.isInteger(matchId) || !Number.isInteger(refId)) {
@@ -777,7 +882,7 @@ app.post('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
   if (!match) {
     return res.status(404).json({ error: 'Match not found.' });
   }
-  if (match.home_team_id !== req.user.team_id && match.away_team_id !== req.user.team_id) {
+  if (!ownsOrOverrides(req, match.home_team_id) && !ownsOrOverrides(req, match.away_team_id)) {
     return res.status(403).json({ error: 'Your team is not part of this match.' });
   }
 
@@ -803,9 +908,14 @@ app.post('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
     )
     .all(matchId);
   res.json(referees);
-});
+  }
+);
 
-app.delete('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
+app.delete(
+  '/api/matches/:id/referees/:refId',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
   const matchId = Number(req.params.id);
   const refId = Number(req.params.refId);
   if (!Number.isInteger(matchId) || !Number.isInteger(refId)) {
@@ -816,7 +926,7 @@ app.delete('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
   if (!match) {
     return res.status(404).json({ error: 'Match not found.' });
   }
-  if (match.home_team_id !== req.user.team_id && match.away_team_id !== req.user.team_id) {
+  if (!ownsOrOverrides(req, match.home_team_id) && !ownsOrOverrides(req, match.away_team_id)) {
     return res.status(403).json({ error: 'Your team is not part of this match.' });
   }
 
@@ -825,7 +935,8 @@ app.delete('/api/matches/:id/referees/:refId', requireAuth, (req, res) => {
     refId
   );
   res.status(204).end();
-});
+  }
+);
 
 app.get('/api/venues', (req, res) => {
   const venues = db
@@ -875,7 +986,7 @@ app.get('/api/friendly-requests', requireAuth, (req, res) => {
   res.json(withVenue);
 });
 
-app.post('/api/friendly-requests', requireAuth, (req, res) => {
+app.post('/api/friendly-requests', requireAuth, requireRole('coach_manager'), (req, res) => {
   const { date, time, venueId } = req.body || {};
   if (typeof date !== 'string' || typeof time !== 'string') {
     return res.status(400).json({ error: 'date and time are required.' });
@@ -894,7 +1005,7 @@ app.post('/api/friendly-requests', requireAuth, (req, res) => {
   res.status(201).json(created);
 });
 
-app.post('/api/friendly-requests/:id/invite', requireAuth, (req, res) => {
+app.post('/api/friendly-requests/:id/invite', requireAuth, requireRole('coach_manager'), (req, res) => {
   const requestId = Number(req.params.id);
   if (!Number.isInteger(requestId)) {
     return res.status(400).json({ error: 'Request id must be an integer.' });
@@ -952,7 +1063,7 @@ app.get('/api/standings', (req, res) => {
   res.json(standings);
 });
 
-app.post('/api/matches/:id/result', (req, res) => {
+app.post('/api/matches/:id/result', requireAuth, requireRole('league_director'), (req, res) => {
   const matchId = Number(req.params.id);
   if (!Number.isInteger(matchId)) {
     return res.status(400).json({ error: 'Match id must be an integer.' });

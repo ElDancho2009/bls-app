@@ -41,7 +41,7 @@ function getUserByToken(token) {
   }
 
   return db
-    .prepare('SELECT id, email, team_id, role FROM users WHERE id = ?')
+    .prepare('SELECT id, email, team_id, role, referee_id FROM users WHERE id = ?')
     .get(session.user_id);
 }
 
@@ -62,6 +62,16 @@ function requireAuth(req, res, next) {
   next();
 }
 
+// Must run after requireAuth — relies on req.user being populated.
+function requireRole(...roles) {
+  return function (req, res, next) {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'You do not have permission to perform this action.' });
+    }
+    next();
+  };
+}
+
 module.exports = {
   hashPassword,
   verifyPassword,
@@ -69,4 +79,5 @@ module.exports = {
   destroySession,
   getUserByToken,
   requireAuth,
+  requireRole,
 };
