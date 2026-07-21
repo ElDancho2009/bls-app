@@ -1,85 +1,202 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
+import PlayerDetailModal from './PlayerDetailModal.jsx';
 
-function statColumns(player) {
-  if (player.position === 'GK') {
-    return [
-      { label: 'CS', val: player.clean_sheets },
-      { label: 'APP', val: player.apps },
-      { label: 'YC', val: player.yellow_cards },
-      { label: 'RC', val: player.red_cards },
-    ];
-  }
-  return [
-    { label: 'G', val: player.goals },
-    { label: 'A', val: player.assists },
-    { label: 'APP', val: player.apps },
-    { label: 'YC', val: player.yellow_cards },
-  ];
+const CATEGORIES = [
+  {
+    key: 'goals',
+    title: 'Top Scorers',
+    valueLabel: 'GOALS',
+    filter: () => true,
+    sort: (a, b) => b.goals - a.goals,
+    value: (p) => p.goals,
+  },
+  {
+    key: 'assists',
+    title: 'Top Assists',
+    valueLabel: 'AST',
+    filter: () => true,
+    sort: (a, b) => b.assists - a.assists,
+    value: (p) => p.assists,
+  },
+  {
+    key: 'cleanSheets',
+    title: 'Top Clean Sheets',
+    valueLabel: 'CS',
+    filter: (p) => p.position === 'GK',
+    sort: (a, b) => b.clean_sheets - a.clean_sheets,
+    value: (p) => p.clean_sheets,
+  },
+];
+
+function PlayerLeaderRow({ rank, player, team, value, valueLabel, onClick }) {
+  return (
+    <button className="leaderboard-row" onClick={onClick}>
+      <div className="leaderboard-rank">{rank}</div>
+      <div className="leaderboard-info">
+        <div className="leaderboard-name">{player.name}</div>
+        <div className="leaderboard-team">
+          {team?.name} · {player.position}
+        </div>
+      </div>
+      <div className="leaderboard-value">
+        <div className="leaderboard-value-num">{value}</div>
+        <div className="leaderboard-value-label">{valueLabel}</div>
+      </div>
+    </button>
+  );
 }
 
-function tierClass(rating) {
-  if (rating >= 88) return 'tier-gold';
-  if (rating >= 83) return 'tier-silver';
-  return 'tier-bronze';
+function TeamLeaderRow({ rank, team, value, valueLabel }) {
+  return (
+    <div className="leaderboard-row team-leaderboard-row">
+      <div className="leaderboard-rank">{rank}</div>
+      <div className="leaderboard-info">
+        <div className="leaderboard-name">{team.name}</div>
+        <div className="leaderboard-team">{team.division}</div>
+      </div>
+      <div className="leaderboard-value">
+        <div className="leaderboard-value-num">{value}</div>
+        <div className="leaderboard-value-label">{valueLabel}</div>
+      </div>
+    </div>
+  );
 }
 
 export default function CardsScreen() {
   const [players, setPlayers] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [standings, setStandings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [query, setQuery] = useState('');
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
-    Promise.all([api.getPlayers(), api.getTeams()])
-      .then(([playersData, teamsData]) => {
+    Promise.all([api.getPlayers(), api.getTeams(), api.getStandings()])
+      .then(([playersData, teamsData, standingsData]) => {
         setPlayers(playersData);
         setTeams(teamsData);
+        setStandings(standingsData);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
+  const teamsById = useMemo(() => Object.fromEntries(teams.map((t) => [t.id, t])), [teams]);
+
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    return players
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (teamsById[p.team_id]?.name.toLowerCase().includes(q) ?? false)
+      )
+      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  }, [query, players, teamsById]);
+
+  const teamOffense = useMemo(
+    () => [...standings].sort((a, b) => b.gf - a.gf).slice(0, 5),
+    [standings]
+  );
+  const teamDefense = useMemo(
+    () => [...standings].sort((a, b) => a.ga - b.ga).slice(0, 5),
+    [standings]
+  );
+
   if (loading) return <div className="state-message">Loading player cards…</div>;
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
 
-  const teamsById = Object.fromEntries(teams.map((t) => [t.id, t]));
-  const sorted = [...players].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+  const showSearch = query.trim().length > 0;
 
   return (
     <div className="cards-screen">
       <header className="screen-header">
         <div className="brand-title">PLAYER CARDS</div>
-        <div className="screen-subtitle">All registered players, by rating</div>
+        <div className="screen-subtitle">Stat leaders across the league</div>
       </header>
 
-      <div className="card-list">
-        {sorted.map((player) => {
-          const team = teamsById[player.team_id];
-          return (
-            <div key={player.id} className={`player-card ${tierClass(player.rating)}`}>
-              <div className="player-card-top">
-                <div className="player-rating-badge">{player.rating}</div>
-                <div className="player-card-info">
-                  <div className="player-card-name">{player.name}</div>
-                  <div className="player-card-meta">
-                    {team?.name} · {player.position}
-                  </div>
-                </div>
-                <div className="player-card-number">#{player.number}</div>
-              </div>
-              <div className="player-card-stats">
-                {statColumns(player).map((stat) => (
-                  <div key={stat.label} className="player-stat">
-                    <div className="player-stat-val">{stat.val}</div>
-                    <div className="player-stat-label">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      <div className="cards-search-row">
+        <input
+          type="text"
+          className="cards-search-input"
+          placeholder="Search players or teams…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
       </div>
+
+      {showSearch ? (
+        <div className="leaderboard-list search-results-list">
+          {searchResults.length === 0 && (
+            <div className="state-message">No players match "{query}".</div>
+          )}
+          {searchResults.map((player, i) => (
+            <PlayerLeaderRow
+              key={player.id}
+              rank={i + 1}
+              player={player}
+              team={teamsById[player.team_id]}
+              value={player.rating}
+              valueLabel="RTG"
+              onClick={() => setSelectedPlayer(player)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="leaderboard-sections">
+          {CATEGORIES.map((cat) => {
+            const rows = players.filter(cat.filter).sort(cat.sort).slice(0, 5);
+            return (
+              <section key={cat.key} className="leaderboard-section">
+                <div className="leaderboard-section-title">{cat.title.toUpperCase()}</div>
+                <div className="leaderboard-list">
+                  {rows.length === 0 && <div className="state-message">No data yet.</div>}
+                  {rows.map((player, i) => (
+                    <PlayerLeaderRow
+                      key={player.id}
+                      rank={i + 1}
+                      player={player}
+                      team={teamsById[player.team_id]}
+                      value={cat.value(player)}
+                      valueLabel={cat.valueLabel}
+                      onClick={() => setSelectedPlayer(player)}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+
+          <section className="leaderboard-section">
+            <div className="leaderboard-section-title">TEAM OFFENSE</div>
+            <div className="leaderboard-list">
+              {teamOffense.map((row, i) => (
+                <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.gf} valueLabel="GF" />
+              ))}
+            </div>
+          </section>
+
+          <section className="leaderboard-section">
+            <div className="leaderboard-section-title">TEAM DEFENSE</div>
+            <div className="leaderboard-list">
+              {teamDefense.map((row, i) => (
+                <TeamLeaderRow key={row.id} rank={i + 1} team={row} value={row.ga} valueLabel="GA" />
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {selectedPlayer && (
+        <PlayerDetailModal
+          player={selectedPlayer}
+          team={teamsById[selectedPlayer.team_id]}
+          onClose={() => setSelectedPlayer(null)}
+        />
+      )}
     </div>
   );
 }

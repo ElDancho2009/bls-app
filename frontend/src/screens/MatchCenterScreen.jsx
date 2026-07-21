@@ -1,17 +1,26 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
-const ALL_TABS = ['timeline', 'lineups', 'form', 'media', 'motm'];
+const ALL_TABS = ['timeline', 'lineups', 'form', 'media'];
+const EVENT_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'goal', label: 'Goals' },
+  { key: 'card', label: 'Cards' },
+];
 
 export default function MatchCenterScreen({ matchId, onClose }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('timeline');
+  const [scrubMinute, setScrubMinute] = useState(90);
+  const [eventFilter, setEventFilter] = useState('all');
 
   useEffect(() => {
     setData(null);
     setError(null);
     setTab('timeline');
+    setScrubMinute(90);
+    setEventFilter('all');
     api.getMatch(matchId).then(setData).catch((err) => setError(err.message));
   }, [matchId]);
 
@@ -19,7 +28,7 @@ export default function MatchCenterScreen({ matchId, onClose }) {
   if (!data) return <div className="state-message">Loading match…</div>;
 
   const { match, homeTeam, awayTeam, events, lineups, media, motm, form } = data;
-  const tabs = ALL_TABS.filter((t) => t !== 'motm' || motm.length > 0);
+  const tabs = ALL_TABS;
 
   async function handleVote(candidateId) {
     const updated = await api.voteMotm(match.id, candidateId);
@@ -28,6 +37,13 @@ export default function MatchCenterScreen({ matchId, onClose }) {
       motm: prev.motm.map((c) => (c.id === updated.id ? updated : c)),
     }));
   }
+
+  const visibleEvents = events.filter((ev) => {
+    if (ev.minute > scrubMinute) return false;
+    if (eventFilter === 'goal') return ev.type === 'goal';
+    if (eventFilter === 'card') return ev.type === 'yellow' || ev.type === 'red';
+    return true;
+  });
 
   return (
     <div className="match-center">
@@ -56,6 +72,21 @@ export default function MatchCenterScreen({ matchId, onClose }) {
       </div>
       <div className="mc-venue">{match.venue}</div>
 
+      {motm.length > 0 && (
+        <div className="motm-cta-card">
+          <div className="motm-cta-title">⭐ VOTE MAN OF THE MATCH</div>
+          <div className="motm-list">
+            {motm.map((c) => (
+              <button key={c.id} className="motm-candidate" onClick={() => handleVote(c.id)}>
+                <div className="motm-name">{c.player_name}</div>
+                <div className="motm-blurb">{c.blurb}</div>
+                <div className="motm-votes">{c.votes} votes</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="chip-row">
         {tabs.map((t) => (
           <button
@@ -69,21 +100,47 @@ export default function MatchCenterScreen({ matchId, onClose }) {
       </div>
 
       {tab === 'timeline' && (
-        <div className="timeline-list">
-          {events.length === 0 && <div className="state-message">No events yet.</div>}
-          {events.map((ev) => (
-            <div
-              key={ev.id}
-              className={`timeline-event ${
-                ev.team_id === match.home_team_id ? 'event-home' : 'event-away'
-              }`}
-            >
-              <span className="event-minute">{ev.minute}'</span>
-              <span className="event-player">{ev.player_name}</span>
-              {ev.detail && <span className="event-detail">{ev.detail}</span>}
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="mc-scrubber">
+            <input
+              type="range"
+              min="0"
+              max="90"
+              value={scrubMinute}
+              onChange={(e) => setScrubMinute(Number(e.target.value))}
+              className="mc-scrubber-input"
+            />
+            <div className="mc-scrubber-label">Showing through minute {scrubMinute}'</div>
+          </div>
+
+          <div className="chip-row mc-event-filter-row">
+            {EVENT_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                className={`chip ${eventFilter === f.key ? 'chip-active' : ''}`}
+                onClick={() => setEventFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="timeline-list">
+            {visibleEvents.length === 0 && <div className="state-message">No events yet.</div>}
+            {visibleEvents.map((ev) => (
+              <div
+                key={ev.id}
+                className={`timeline-event ${
+                  ev.team_id === match.home_team_id ? 'event-home' : 'event-away'
+                }`}
+              >
+                <span className="event-minute">{ev.minute}'</span>
+                <span className="event-player">{ev.player_name}</span>
+                {ev.detail && <span className="event-detail">{ev.detail}</span>}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {tab === 'lineups' && (
@@ -153,18 +210,6 @@ export default function MatchCenterScreen({ matchId, onClose }) {
                 {clip.minute}' · {clip.views_count.toLocaleString()} views
               </span>
             </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'motm' && (
-        <div className="motm-list">
-          {motm.map((c) => (
-            <button key={c.id} className="motm-candidate" onClick={() => handleVote(c.id)}>
-              <div className="motm-name">{c.player_name}</div>
-              <div className="motm-blurb">{c.blurb}</div>
-              <div className="motm-votes">{c.votes} votes</div>
-            </button>
           ))}
         </div>
       )}
