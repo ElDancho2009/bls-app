@@ -27,6 +27,8 @@ export const api = {
     request(`/matches/${matchId}/motm/${candidateId}/vote`, { method: 'POST' }),
   getStandings: (division) => request(`/standings${division ? `?division=${division}` : ''}`),
   getPlayers: (teamId) => request(`/players${teamId ? `?team_id=${teamId}` : ''}`),
+  createPlayer: ({ name, number, position, teamId }, token) =>
+    request('/players', { method: 'POST', body: JSON.stringify({ name, number, position, teamId }) }, token),
 
   login: (email, password) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),

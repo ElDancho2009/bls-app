@@ -158,6 +158,54 @@ app.get('/api/players', (req, res) => {
   res.json(players);
 });
 
+const PLAYER_POSITIONS = ['GK', 'DF', 'MF', 'FW'];
+
+app.post(
+  '/api/players',
+  requireAuth,
+  requireRole('coach_manager', 'league_director'),
+  (req, res) => {
+    const { name, number, position } = req.body || {};
+
+    if (typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'name is required.' });
+    }
+    if (!Number.isInteger(number) || number < 1 || number > 99) {
+      return res.status(400).json({ error: 'number must be an integer between 1 and 99.' });
+    }
+    if (!PLAYER_POSITIONS.includes(position)) {
+      return res.status(400).json({ error: `position must be one of: ${PLAYER_POSITIONS.join(', ')}.` });
+    }
+
+    let teamId;
+    if (req.user.role === 'league_director') {
+      teamId = Number(req.body?.teamId);
+      if (!Number.isInteger(teamId)) {
+        return res.status(400).json({ error: 'teamId is required for league directors.' });
+      }
+      const team = db.prepare('SELECT id FROM teams WHERE id = ?').get(teamId);
+      if (!team) {
+        return res.status(404).json({ error: 'Team not found.' });
+      }
+    } else {
+      teamId = req.user.team_id;
+    }
+
+    const existingNumber = db
+      .prepare('SELECT id FROM players WHERE team_id = ? AND number = ?')
+      .get(teamId, number);
+    if (existingNumber) {
+      return res.status(409).json({ error: `Number ${number} is already taken on this team.` });
+    }
+
+    const { lastInsertRowid } = db
+      .prepare('INSERT INTO players (name, team_id, position, number) VALUES (?, ?, ?, ?)')
+      .run(name.trim(), teamId, position, number);
+    const created = db.prepare('SELECT * FROM players WHERE id = ?').get(lastInsertRowid);
+    res.status(201).json(created);
+  }
+);
+
 app.patch(
   '/api/players/:id/status',
   requireAuth,
@@ -713,7 +761,14 @@ app.put(
 
 function checkinBadge(player) {
   if (player.status === 'injured') {
-    return { badgeLabel: 'Injured', badgeBg: '#d1293f', badgeColor: '#fff', flagged: true, canCheckIn: true };
+    return {
+      badgeLabel: 'Injured',
+      badgeBg: '#d1293f',
+      badgeColor: '#fff',
+      flagged: true,
+      bannerText: 'Marked injured — cannot be fielded this match.',
+      canCheckIn: false,
+    };
   }
   if (player.red_cards >= 1) {
     return {
