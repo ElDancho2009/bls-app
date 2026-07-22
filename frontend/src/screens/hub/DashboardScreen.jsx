@@ -3,6 +3,12 @@ import { useAuth } from '../../AuthContext.jsx';
 import { api } from '../../api.js';
 import PitchSheetModal from './PitchSheetModal.jsx';
 
+function dangerZoneMeta(player) {
+  return player.yellow_cards === 2
+    ? '1 yellow away from suspension'
+    : `${player.yellow_cards} yellow cards accumulated`;
+}
+
 export default function DashboardScreen({ onNavigate }) {
   const { team, token } = useAuth();
   const [matches, setMatches] = useState([]);
@@ -45,9 +51,14 @@ export default function DashboardScreen({ onNavigate }) {
 
   const teamsById = Object.fromEntries(teams.map((t) => [t.id, t]));
   const injuredCount = players.filter((p) => p.status === 'injured').length;
+  const suspendedPlayers = players.filter((p) => p.red_cards >= 1);
+  const dangerZonePlayers = players.filter((p) => p.red_cards === 0 && p.yellow_cards >= 2);
+  const hasDisciplineIssues = suspendedPlayers.length > 0 || dangerZonePlayers.length > 0;
 
   let opponentLine = null;
-  let scheduleLine = null;
+  let matchLocationTag = null;
+  let dateTimeLine = null;
+  let venueLine = null;
   if (nextMatch) {
     const isHome = nextMatch.home_team_id === team.id;
     const opponent = teamsById[isHome ? nextMatch.away_team_id : nextMatch.home_team_id];
@@ -58,18 +69,29 @@ export default function DashboardScreen({ onNavigate }) {
       day: 'numeric',
     });
     const timeText = kickoff.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    opponentLine = `${isHome ? 'vs' : '@'} ${opponent?.name}`;
-    scheduleLine = `${dateText} · ${timeText} · ${nextMatch.venue}`;
+    opponentLine = opponent?.name;
+    matchLocationTag = isHome ? 'HOME' : 'AWAY';
+    dateTimeLine = `${dateText} · ${timeText}`;
+    venueLine = nextMatch.venue;
   }
 
   return (
     <div className="dashboard-screen">
       <div className="dashboard-card">
-        <div className="dashboard-card-label">NEXT MATCHDAY</div>
+        <div className="dashboard-card-label dashboard-matchday-label">
+          <span className="dashboard-matchday-dot" />
+          NEXT MATCHDAY
+        </div>
         {nextMatch ? (
           <>
-            <div className="dashboard-next-match">{opponentLine}</div>
-            <div className="dashboard-next-match-sub">{scheduleLine}</div>
+            <div className="dashboard-next-match">
+              <span className="dashboard-matchday-location">{matchLocationTag}</span>
+              {opponentLine}
+            </div>
+            <div className="dashboard-matchday-meta">
+              <span className="dashboard-matchday-time">{dateTimeLine}</span>
+              <span className="dashboard-matchday-venue">{venueLine}</span>
+            </div>
           </>
         ) : (
           <div className="state-message">No upcoming matches scheduled.</div>
@@ -88,6 +110,47 @@ export default function DashboardScreen({ onNavigate }) {
         <div className="dashboard-stat">
           <div className="dashboard-stat-val">{refereeCount}</div>
           <div className="dashboard-stat-label">REFS</div>
+        </div>
+      </div>
+
+      <div>
+        <div className="dashboard-card-label">SQUAD DISCIPLINE</div>
+        <div className="squad-discipline-card">
+          {hasDisciplineIssues ? (
+            <div className="squad-discipline-rows">
+              {suspendedPlayers.map((p) => (
+                <div key={`susp-${p.id}`} className="squad-discipline-row">
+                  <span className="squad-discipline-badge squad-discipline-badge-danger">
+                    SUSPENDED
+                  </span>
+                  <div className="squad-discipline-info">
+                    <div className="squad-discipline-name">{p.name}</div>
+                    <div className="squad-discipline-meta">
+                      {p.red_cards} red card{p.red_cards === 1 ? '' : 's'} · 1 match ban
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {dangerZonePlayers.map((p) => (
+                <div key={`danger-${p.id}`} className="squad-discipline-row">
+                  <span className="squad-discipline-badge squad-discipline-badge-warn">
+                    AT RISK
+                  </span>
+                  <div className="squad-discipline-info">
+                    <div className="squad-discipline-name">{p.name}</div>
+                    <div className="squad-discipline-meta">{dangerZoneMeta(p)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="squad-discipline-clean">
+              <span className="squad-discipline-pill">SQUAD ELIGIBLE</span>
+              <span className="squad-discipline-clean-text">
+                No suspensions or disciplinary flags
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

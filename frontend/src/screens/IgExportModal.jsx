@@ -17,9 +17,9 @@ export default function IgExportModal({ totwSlots, onClose }) {
             <div className="brand-mark ig-story-logo" aria-hidden="true">
               BLS
             </div>
-            <div className="ig-story-brand">BOROUGH LEAGUE</div>
+            <div className="ig-story-brand">Borough League</div>
           </div>
-          <div className="ig-story-title">TEAM OF THE WEEK</div>
+          <div className="ig-story-title">Team of the Week</div>
           <div className="ig-story-pitch">
             {totwSlots.map(({ slot, player }) => (
               <div

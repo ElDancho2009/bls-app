@@ -24,6 +24,10 @@ function votePercentages(items) {
   return Object.fromEntries(items.map((i) => [i.id, Math.round((i.votes / total) * 100)]));
 }
 
+function bulletinDateTag(isoString) {
+  return new Date(isoString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export default function NewsScreen({ onSelectMatch }) {
   const { user, token } = useAuth();
   const showToast = useToast();
@@ -33,7 +37,6 @@ export default function NewsScreen({ onSelectMatch }) {
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState(null);
   const [motw, setMotw] = useState(null);
-  const [discipline, setDiscipline] = useState({ suspended: [], dangerZone: [] });
   const [gotw, setGotw] = useState([]);
   const [potw, setPotw] = useState([]);
   const [totw, setTotw] = useState([]);
@@ -51,15 +54,13 @@ export default function NewsScreen({ onSelectMatch }) {
     Promise.all([
       api.getBulletins(),
       api.getMatchOfWeek().catch(() => null),
-      api.getDiscipline(),
       api.getGotw(),
       api.getPotw(),
       api.getTotw(),
     ])
-      .then(([bulletinsData, motwData, disciplineData, gotwData, potwData, totwData]) => {
+      .then(([bulletinsData, motwData, gotwData, potwData, totwData]) => {
         setBulletins(bulletinsData);
         setMotw(motwData);
-        setDiscipline(disciplineData);
         setGotw(gotwData);
         setPotw(potwData);
         setTotw(totwData);
@@ -112,7 +113,7 @@ export default function NewsScreen({ onSelectMatch }) {
   return (
     <div className="news-screen">
       <header className="screen-header">
-        <div className="brand-title">NEWS</div>
+        <div className="brand-title">News</div>
         <div className="screen-subtitle">Highlights, votes &amp; the team of the week</div>
       </header>
 
@@ -149,7 +150,10 @@ export default function NewsScreen({ onSelectMatch }) {
         <div className="bulletin-list">
           {bulletins.map((b) => (
             <div key={b.id} className="bulletin-card">
-              <span className="bulletin-badge">BLS COMMISH</span>
+              <div className="bulletin-header-row">
+                <span className="bulletin-badge">LEAGUE DISPATCH</span>
+                <span className="bulletin-meta-tag">{bulletinDateTag(b.created_at)}</span>
+              </div>
               <div className="bulletin-title">{b.title}</div>
               <div className="bulletin-body">{b.body}</div>
             </div>
@@ -317,46 +321,6 @@ export default function NewsScreen({ onSelectMatch }) {
           </button>
         </section>
       )}
-
-      <section className="news-section">
-        <div className="leaderboard-section-title">DISCIPLINE &amp; SUSPENSION WIRE</div>
-        <div className="discipline-list">
-          {discipline.suspended.length === 0 && (
-            <div className="state-message">No suspensions right now.</div>
-          )}
-          {discipline.suspended.map((p) => (
-            <div key={p.id} className="discipline-row">
-              <div className="discipline-card-bar discipline-bar-red" />
-              <Crest src={p.team_logo_url} size={24} />
-              <div className="discipline-info">
-                <div className="discipline-name">{p.name}</div>
-                <div className="discipline-meta">{p.team_name} · Red Card</div>
-              </div>
-              <div className="discipline-flag discipline-flag-red">1 Match Ban</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="news-section">
-        <div className="leaderboard-section-title">YELLOW CARD DANGER ZONE</div>
-        <div className="discipline-list">
-          {discipline.dangerZone.length === 0 && (
-            <div className="state-message">No one is close to suspension.</div>
-          )}
-          {discipline.dangerZone.map((p) => (
-            <div key={p.id} className="discipline-row">
-              <div className="discipline-card-bar discipline-bar-yellow" />
-              <Crest src={p.team_logo_url} size={24} />
-              <div className="discipline-info">
-                <div className="discipline-name">{p.name}</div>
-                <div className="discipline-meta">{p.team_name}</div>
-              </div>
-              <div className="discipline-flag discipline-flag-yellow">{p.yellow_cards} Yellows</div>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {igOpen && <IgExportModal totwSlots={totwSlots} onClose={() => setIgOpen(false)} />}
     </div>

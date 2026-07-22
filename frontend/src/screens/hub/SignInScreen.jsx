@@ -24,7 +24,7 @@ export default function SignInScreen() {
   return (
     <div className="signin-screen">
       <div className="signin-brand">
-        <div className="brand-title">TEAM HUB</div>
+        <div className="brand-title">Team Hub</div>
         <div className="screen-subtitle">Coach &amp; captain sign-in</div>
       </div>
 

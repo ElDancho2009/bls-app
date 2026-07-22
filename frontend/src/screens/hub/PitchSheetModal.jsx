@@ -29,7 +29,7 @@ export default function PitchSheetModal({ matchId, onClose }) {
           <div className="brand-mark pitch-sheet-logo" aria-hidden="true">
             BLS
           </div>
-          <div className="pitch-sheet-title">OFFICIAL PITCH SHEET</div>
+          <div className="pitch-sheet-title">Official Pitch Sheet</div>
         </div>
 
         {error && <div className="state-message error">Failed to load: {error}</div>}

@@ -13,8 +13,8 @@ const DIVISIONS = [
 ];
 
 function dayLabel(date) {
-  if (isSameDay(date.toISOString(), new Date())) return 'TODAY';
-  return date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+  if (isSameDay(date.toISOString(), new Date())) return 'Today';
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
 }
 
 function isSameDay(isoString, date) {
@@ -78,8 +78,8 @@ export default function MatchesScreen({ onSelectMatch }) {
         <header className="screen-header brand-header">
           <img className="brand-mark" src="/bls-logo.png" alt="BLS" />
           <div>
-            <div className="brand-title">BOROUGH LEAGUE</div>
-            <div className="brand-subtitle">SOCCER</div>
+            <div className="brand-title">Borough League</div>
+            <div className="brand-subtitle">Soccer</div>
           </div>
         </header>
 
@@ -152,8 +152,8 @@ export default function MatchesScreen({ onSelectMatch }) {
       <header className="screen-header brand-header">
         <img className="brand-mark" src="/bls-logo.png" alt="BLS" />
         <div>
-          <div className="brand-title">BOROUGH LEAGUE</div>
-          <div className="brand-subtitle">SOCCER</div>
+          <div className="brand-title">Borough League</div>
+          <div className="brand-subtitle">Soccer</div>
         </div>
       </header>
 

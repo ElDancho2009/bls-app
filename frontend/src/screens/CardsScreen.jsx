@@ -50,6 +50,7 @@ function PlayerLeaderRow({ rank, player, team, value, valueLabel, onClick }) {
   return (
     <button className="leaderboard-row" onClick={onClick}>
       <div className="leaderboard-rank">{rank}</div>
+      <Crest src={team?.logo_url} />
       <div className="leaderboard-info">
         <div className="leaderboard-name">
           {player.name}
@@ -142,16 +143,18 @@ export default function CardsScreen({ onSelectTeam }) {
     return (
       <div className="cards-screen">
         <header className="screen-header">
-          <div className="brand-title">PLAYERS</div>
+          <div className="brand-title">Players</div>
           <div className="screen-subtitle">Stat leaders across all divisions</div>
         </header>
         <div className="leaderboard-sections">
           {Array.from({ length: 3 }).map((_, section) => (
             <section key={section} className="leaderboard-section">
               <div className="leaderboard-list">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} style={{ height: 46, borderRadius: 14 }} />
-                ))}
+                <div className="leaderboard-card">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} style={{ height: 46 }} />
+                  ))}
+                </div>
               </div>
             </section>
           ))}
@@ -166,7 +169,7 @@ export default function CardsScreen({ onSelectTeam }) {
   return (
     <div className="cards-screen">
       <header className="screen-header">
-        <div className="brand-title">PLAYERS</div>
+        <div className="brand-title">Players</div>
         <div className="screen-subtitle">Stat leaders across all divisions</div>
       </header>
 
@@ -218,17 +221,21 @@ export default function CardsScreen({ onSelectTeam }) {
                 <div className="leaderboard-section-title">{cat.title.toUpperCase()}</div>
                 <div className="leaderboard-list">
                   {rows.length === 0 && <div className="state-message">No data yet.</div>}
-                  {rows.map((player, i) => (
-                    <PlayerLeaderRow
-                      key={player.id}
-                      rank={i + 1}
-                      player={player}
-                      team={teamsById[player.team_id]}
-                      value={cat.value(player)}
-                      valueLabel={cat.valueLabel}
-                      onClick={() => setSelectedPlayer(player)}
-                    />
-                  ))}
+                  {rows.length > 0 && (
+                    <div className="leaderboard-card">
+                      {rows.map((player, i) => (
+                        <PlayerLeaderRow
+                          key={player.id}
+                          rank={i + 1}
+                          player={player}
+                          team={teamsById[player.team_id]}
+                          value={cat.value(player)}
+                          valueLabel={cat.valueLabel}
+                          onClick={() => setSelectedPlayer(player)}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </section>
             );
@@ -237,32 +244,36 @@ export default function CardsScreen({ onSelectTeam }) {
           <section className="leaderboard-section">
             <div className="leaderboard-section-title">BEST ATTACK</div>
             <div className="leaderboard-list">
-              {teamOffense.map((row, i) => (
-                <TeamLeaderRow
-                  key={row.id}
-                  rank={i + 1}
-                  team={row}
-                  value={row.gf}
-                  valueLabel="GF"
-                  onClick={() => onSelectTeam(row.id)}
-                />
-              ))}
+              <div className="leaderboard-card">
+                {teamOffense.map((row, i) => (
+                  <TeamLeaderRow
+                    key={row.id}
+                    rank={i + 1}
+                    team={row}
+                    value={row.gf}
+                    valueLabel="GF"
+                    onClick={() => onSelectTeam(row.id)}
+                  />
+                ))}
+              </div>
             </div>
           </section>
 
           <section className="leaderboard-section">
             <div className="leaderboard-section-title">BEST DEFENSE</div>
             <div className="leaderboard-list">
-              {teamDefense.map((row, i) => (
-                <TeamLeaderRow
-                  key={row.id}
-                  rank={i + 1}
-                  team={row}
-                  value={row.ga}
-                  valueLabel="GA"
-                  onClick={() => onSelectTeam(row.id)}
-                />
-              ))}
+              <div className="leaderboard-card">
+                {teamDefense.map((row, i) => (
+                  <TeamLeaderRow
+                    key={row.id}
+                    rank={i + 1}
+                    team={row}
+                    value={row.ga}
+                    valueLabel="GA"
+                    onClick={() => onSelectTeam(row.id)}
+                  />
+                ))}
+              </div>
             </div>
           </section>
         </div>

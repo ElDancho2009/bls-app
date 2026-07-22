@@ -29,7 +29,7 @@ export default function LeaguesScreen({ onSelectTeam }) {
   return (
     <div className="leagues-screen">
       <header className="screen-header">
-        <div className="brand-title">LEAGUES</div>
+        <div className="brand-title">Leagues</div>
       </header>
 
       <div className="chip-row">

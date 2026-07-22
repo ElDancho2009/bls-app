@@ -58,12 +58,12 @@ export default function RefSheetScreen({ matchId, onClose }) {
 
       {submitted ? (
         <div className="ref-sheet-submitted">
-          <div className="ref-sheet-submitted-title">✓ SUBMITTED</div>
+          <div className="ref-sheet-submitted-title">✓ Submitted</div>
           <div className="ref-sheet-submitted-body">Match sheet submitted to the league office.</div>
         </div>
       ) : !canSignOff ? (
         <div className="ref-sheet-pin-screen">
-          <div className="ref-sheet-pin-title">{user ? 'NOT AUTHORIZED' : 'SIGN IN REQUIRED'}</div>
+          <div className="ref-sheet-pin-title">{user ? 'Not Authorized' : 'Sign In Required'}</div>
           <div className="ref-sheet-pin-hint">
             {user
               ? "You're not the referee assigned to this match."

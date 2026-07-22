@@ -39,7 +39,7 @@ export default function TeamHubScreen() {
         <div className="hub-topbar-identity">
           {isCoach && <Crest src={team?.logo_url} size={32} />}
           <div className="hub-team-name">
-            {isCoach ? `${team?.name.toUpperCase()} · HUB` : user.email.toUpperCase()}
+            {isCoach ? `${team?.name} · Hub` : user.email}
           </div>
         </div>
         <button className="hub-signout" onClick={logout}>
