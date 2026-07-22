@@ -30,6 +30,7 @@ export default function LeaguesScreen({ onSelectTeam }) {
     <div className="leagues-screen">
       <header className="screen-header">
         <div className="brand-title">Leagues</div>
+        <div className="screen-subtitle">NYC's grassroots football across every borough.</div>
       </header>
 
       <div className="chip-row">

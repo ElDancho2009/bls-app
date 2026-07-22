@@ -108,22 +108,22 @@ export default function CardsScreen({ onSelectTeam }) {
 
   const teamsById = useMemo(() => Object.fromEntries(teams.map((t) => [t.id, t])), [teams]);
 
+  const divisionPlayers = useMemo(() => {
+    if (division === 'all') return players;
+    return players.filter((p) => teamsById[p.team_id]?.division === division);
+  }, [players, teamsById, division]);
+
   const searchResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return players
+    return divisionPlayers
       .filter(
         (p) =>
           p.name.toLowerCase().includes(q) ||
           (teamsById[p.team_id]?.name.toLowerCase().includes(q) ?? false)
       )
       .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-  }, [query, players, teamsById]);
-
-  const divisionPlayers = useMemo(() => {
-    if (division === 'all') return players;
-    return players.filter((p) => teamsById[p.team_id]?.division === division);
-  }, [players, teamsById, division]);
+  }, [query, divisionPlayers, teamsById]);
 
   const divisionStandings = useMemo(() => {
     if (division === 'all') return standings;

@@ -7,6 +7,22 @@ const EVENT_FILTERS = [
   { key: 'goal', label: 'Goals' },
   { key: 'card', label: 'Cards' },
 ];
+const POSITION_ROWS = ['GK', 'DF', 'MF', 'FW'];
+
+function groupStartersByPosition(players) {
+  return POSITION_ROWS.map((pos) => players.filter((p) => p.is_starting && p.pos === pos)).filter(
+    (row) => row.length > 0
+  );
+}
+
+function PlayerNode({ player, side }) {
+  return (
+    <div className="pitch-player">
+      <div className={`pitch-player-badge pitch-player-badge-${side}`}>{player.num}</div>
+      <div className="pitch-player-name">{player.player_name}</div>
+    </div>
+  );
+}
 
 export default function MatchCenterScreen({ matchId, onClose, onSelectTeam, onSelectRefSheet }) {
   const [data, setData] = useState(null);
@@ -18,10 +34,15 @@ export default function MatchCenterScreen({ matchId, onClose, onSelectTeam, onSe
   useEffect(() => {
     setData(null);
     setError(null);
-    setTab('timeline');
     setScrubMinute(90);
     setEventFilter('all');
-    api.getMatch(matchId).then(setData).catch((err) => setError(err.message));
+    api
+      .getMatch(matchId)
+      .then((result) => {
+        setData(result);
+        setTab(result.match.status === 'upcoming' ? 'lineups' : 'timeline');
+      })
+      .catch((err) => setError(err.message));
   }, [matchId]);
 
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
@@ -107,74 +128,136 @@ export default function MatchCenterScreen({ matchId, onClose, onSelectTeam, onSe
         ))}
       </div>
 
-      {tab === 'timeline' && (
-        <>
-          <div className="mc-scrubber">
-            <input
-              type="range"
-              min="0"
-              max="90"
-              value={scrubMinute}
-              onChange={(e) => setScrubMinute(Number(e.target.value))}
-              className="mc-scrubber-input"
-            />
-            <div className="mc-scrubber-label">Showing through minute {scrubMinute}'</div>
+      {tab === 'timeline' &&
+        (match.status === 'upcoming' ? (
+          <div className="mc-upcoming-empty">
+            <div className="mc-upcoming-empty-title">Match has not started yet.</div>
+            <div className="mc-upcoming-empty-desc">
+              Live events and timeline controls will unlock at kickoff.
+            </div>
           </div>
+        ) : (
+          <>
+            <div className="mc-scrubber">
+              <input
+                type="range"
+                min="0"
+                max="90"
+                value={scrubMinute}
+                onChange={(e) => setScrubMinute(Number(e.target.value))}
+                className="mc-scrubber-input"
+              />
+              <div className="mc-scrubber-label">Showing through minute {scrubMinute}'</div>
+            </div>
 
-          <div className="chip-row mc-event-filter-row">
-            {EVENT_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                className={`chip ${eventFilter === f.key ? 'chip-active' : ''}`}
-                onClick={() => setEventFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+            <div className="chip-row mc-event-filter-row">
+              {EVENT_FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  className={`chip ${eventFilter === f.key ? 'chip-active' : ''}`}
+                  onClick={() => setEventFilter(f.key)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
 
-          <div className="timeline-list">
-            {visibleEvents.length === 0 && <div className="state-message">No events yet.</div>}
-            {visibleEvents.map((ev) => (
-              <div
-                key={ev.id}
-                className={`timeline-event ${
-                  ev.team_id === match.home_team_id ? 'event-home' : 'event-away'
-                }`}
-              >
-                <span className="event-minute">{ev.minute}'</span>
-                <span className="event-player">{ev.player_name}</span>
-                {ev.detail && <span className="event-detail">{ev.detail}</span>}
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+            <div className="timeline-list">
+              {visibleEvents.length === 0 && <div className="state-message">No events yet.</div>}
+              {visibleEvents.map((ev) => (
+                <div
+                  key={ev.id}
+                  className={`timeline-event ${
+                    ev.team_id === match.home_team_id ? 'event-home' : 'event-away'
+                  }`}
+                >
+                  <span className="event-minute">{ev.minute}'</span>
+                  <span className="event-player">{ev.player_name}</span>
+                  {ev.detail && <span className="event-detail">{ev.detail}</span>}
+                </div>
+              ))}
+            </div>
+          </>
+        ))}
 
-      {tab === 'lineups' && (
-        <div className="lineups-columns">
-          <div className="lineup-column">
-            <div className="lineup-formation">{match.home_formation || 'TBD'}</div>
-            {lineups.home.map((p) => (
-              <div key={p.id} className="lineup-player">
-                <span className="lineup-num">{p.num}</span>
-                <span>{p.player_name}</span>
-                <span className="lineup-pos">{p.pos}</span>
+      {tab === 'lineups' &&
+        (() => {
+          const homeRows = groupStartersByPosition(lineups.home);
+          const awayRows = groupStartersByPosition(lineups.away);
+          const homeSubs = lineups.home.filter((p) => !p.is_starting);
+          const awaySubs = lineups.away.filter((p) => !p.is_starting);
+          return (
+            <>
+              <div className="pitch-card">
+                <svg className="pitch-markings" viewBox="0 0 100 150" preserveAspectRatio="none">
+                  <rect x="2" y="2" width="96" height="146" className="pitch-line" />
+                  <line x1="2" y1="75" x2="98" y2="75" className="pitch-line" />
+                  <circle cx="50" cy="75" r="12" className="pitch-line" />
+                  <circle cx="50" cy="75" r="0.8" className="pitch-dot" />
+                  <rect x="25" y="2" width="50" height="18" className="pitch-line" />
+                  <rect x="25" y="130" width="50" height="18" className="pitch-line" />
+                </svg>
+
+                <div className="pitch-half pitch-half-away">
+                  {awayRows.length > 0 && (
+                    <div className="pitch-formation-label">{match.away_formation || 'TBD'}</div>
+                  )}
+                  {awayRows.map((row, i) => (
+                    <div className="pitch-row" key={`away-${i}`}>
+                      {row.map((p) => (
+                        <PlayerNode key={p.id} player={p} side="away" />
+                      ))}
+                    </div>
+                  ))}
+                  {awayRows.length === 0 && (
+                    <div className="pitch-tbd-overlay">Lineup TBD</div>
+                  )}
+                </div>
+
+                <div className="pitch-half pitch-half-home">
+                  {[...homeRows].reverse().map((row, i) => (
+                    <div className="pitch-row" key={`home-${i}`}>
+                      {row.map((p) => (
+                        <PlayerNode key={p.id} player={p} side="home" />
+                      ))}
+                    </div>
+                  ))}
+                  {homeRows.length === 0 && (
+                    <div className="pitch-tbd-overlay">Lineup TBD</div>
+                  )}
+                  {homeRows.length > 0 && (
+                    <div className="pitch-formation-label">{match.home_formation || 'TBD'}</div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="lineup-column">
-            <div className="lineup-formation">{match.away_formation || 'TBD'}</div>
-            {lineups.away.map((p) => (
-              <div key={p.id} className="lineup-player">
-                <span className="lineup-num">{p.num}</span>
-                <span>{p.player_name}</span>
-                <span className="lineup-pos">{p.pos}</span>
+
+              <div className="lineups-columns">
+                <div className="lineup-column">
+                  <div className="lineup-formation">Substitutes</div>
+                  {homeSubs.length === 0 && <div className="state-message">No subs listed.</div>}
+                  {homeSubs.map((p) => (
+                    <div key={p.id} className="lineup-player">
+                      <span className="lineup-num">{p.num}</span>
+                      <span>{p.player_name}</span>
+                      <span className="lineup-pos">{p.pos}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="lineup-column">
+                  <div className="lineup-formation">Substitutes</div>
+                  {awaySubs.length === 0 && <div className="state-message">No subs listed.</div>}
+                  {awaySubs.map((p) => (
+                    <div key={p.id} className="lineup-player">
+                      <span className="lineup-num">{p.num}</span>
+                      <span>{p.player_name}</span>
+                      <span className="lineup-pos">{p.pos}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </>
+          );
+        })()}
 
       {tab === 'form' && (
         <div className="form-columns">

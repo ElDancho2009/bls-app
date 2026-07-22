@@ -143,9 +143,15 @@ export default function MatchesScreen({ onSelectMatch }) {
     .filter((m) => inDivision(m) && new Date(m.kickoff_at) > selectedDate)
     .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))[0];
 
-  const nextMatchLabel = nextMatch
-    ? `Next: ${teamsById[nextMatch.home_team_id]?.name} vs ${teamsById[nextMatch.away_team_id]?.name}, ${fixtureDateLabel(nextMatch.kickoff_at)}`
-    : undefined;
+  const nextMatchAction = nextMatch ? (
+    <button
+      className="empty-state-next-btn"
+      onClick={() => setSelectedDate(new Date(nextMatch.kickoff_at))}
+    >
+      Next: {teamsById[nextMatch.home_team_id]?.name} vs {teamsById[nextMatch.away_team_id]?.name},{' '}
+      {fixtureDateLabel(nextMatch.kickoff_at)}
+    </button>
+  ) : undefined;
 
   return (
     <div className="matches-screen">
@@ -211,7 +217,7 @@ export default function MatchesScreen({ onSelectMatch }) {
           <EmptyState
             icon={<CalendarIcon />}
             title="No fixtures scheduled for this date."
-            subtitle={nextMatchLabel}
+            subtitle={nextMatchAction}
           />
         )}
         {(isSearching ? searchResults : visibleMatches).map((match) => {

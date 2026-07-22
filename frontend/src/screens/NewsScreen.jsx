@@ -118,31 +118,33 @@ export default function NewsScreen({ onSelectMatch }) {
       </header>
 
       {user?.role === 'league_director' && (
-        <div className="bulletin-card">
-          <span className="bulletin-badge">PUBLISH ANNOUNCEMENT</span>
-          <input
-            className="ref-sheet-pin-input"
-            style={{ width: '100%', letterSpacing: 'normal', fontSize: '1rem' }}
-            placeholder="Title"
-            value={newsTitle}
-            onChange={(e) => setNewsTitle(e.target.value)}
-          />
-          <textarea
-            className="bulletin-body"
-            style={{ width: '100%', marginTop: '0.5rem' }}
-            placeholder="Announcement body…"
-            value={newsBody}
-            onChange={(e) => setNewsBody(e.target.value)}
-            rows={3}
-          />
-          {postError && <div className="state-message error">{postError}</div>}
-          <button
-            className="ig-export-button"
-            onClick={handlePublish}
-            disabled={posting || !newsTitle.trim() || !newsBody.trim()}
-          >
-            {posting ? 'Publishing…' : 'Publish Announcement'}
-          </button>
+        <div className="bulletin-list">
+          <div className="bulletin-card">
+            <span className="bulletin-badge">PUBLISH ANNOUNCEMENT</span>
+            <input
+              className="ref-sheet-pin-input"
+              style={{ width: '100%', letterSpacing: 'normal', fontSize: '1rem' }}
+              placeholder="Title"
+              value={newsTitle}
+              onChange={(e) => setNewsTitle(e.target.value)}
+            />
+            <textarea
+              className="bulletin-body"
+              style={{ width: '100%', marginTop: '0.5rem' }}
+              placeholder="Announcement body…"
+              value={newsBody}
+              onChange={(e) => setNewsBody(e.target.value)}
+              rows={3}
+            />
+            {postError && <div className="state-message error">{postError}</div>}
+            <button
+              className="ig-export-button"
+              onClick={handlePublish}
+              disabled={posting || !newsTitle.trim() || !newsBody.trim()}
+            >
+              {posting ? 'Publishing…' : 'Publish Announcement'}
+            </button>
+          </div>
         </div>
       )}
 

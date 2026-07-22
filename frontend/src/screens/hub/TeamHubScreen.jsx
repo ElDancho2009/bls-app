@@ -8,7 +8,7 @@ import SquadScreen from './SquadScreen.jsx';
 import MatchmakerScreen from './MatchmakerScreen.jsx';
 import RefereesScreen from './RefereesScreen.jsx';
 import CheckinScreen from './CheckinScreen.jsx';
-import VerifyPlayersScreen from './VerifyPlayersScreen.jsx';
+import DirectorHub from './DirectorHub.jsx';
 
 const COACH_TABS = [
   { key: 'dashboard', label: 'Dashboard' },
@@ -19,8 +19,6 @@ const COACH_TABS = [
   { key: 'checkin', label: 'Check-in' },
 ];
 
-const DIRECTOR_TABS = [{ key: 'verify', label: 'Verify Players' }];
-
 export default function TeamHubScreen() {
   const { user, team, loading, logout } = useAuth();
   const [hubScreen, setHubScreen] = useState(null);
@@ -30,7 +28,7 @@ export default function TeamHubScreen() {
 
   const isCoach = user.role === 'coach_manager';
   const isDirector = user.role === 'league_director';
-  const tabs = isCoach ? COACH_TABS : isDirector ? DIRECTOR_TABS : [];
+  const tabs = isCoach ? COACH_TABS : [];
   const activeScreen = hubScreen ?? tabs[0]?.key ?? null;
 
   return (
@@ -68,7 +66,7 @@ export default function TeamHubScreen() {
       {isCoach && activeScreen === 'referees' && <RefereesScreen />}
       {isCoach && activeScreen === 'checkin' && <CheckinScreen />}
 
-      {isDirector && activeScreen === 'verify' && <VerifyPlayersScreen />}
+      {isDirector && <DirectorHub />}
 
       {user.role === 'referee' && (
         <div className="state-message">

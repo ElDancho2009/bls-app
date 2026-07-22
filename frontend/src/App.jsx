@@ -65,7 +65,7 @@ const TABS = [
   { key: 'news', label: 'News', Icon: NewsIcon },
   { key: 'leagues', label: 'Leagues', Icon: LeaguesIcon },
   { key: 'stats', label: 'Players', Icon: PlayersIcon },
-  { key: 'hub', label: 'Team Hub', Icon: HubIcon },
+  { key: 'hub', label: 'Hub', Icon: HubIcon },
 ];
 
 export default function App() {
