@@ -2867,7 +2867,6 @@ button {
 }
 
 .empty-state-icon {
-  font-size: 28px;
   margin-bottom: 10px;
 }
 
@@ -2875,4 +2874,10 @@ button {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
+}
+
+.empty-state-subtitle {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 4px;
 }

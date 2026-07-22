@@ -12,7 +12,12 @@ import Toast from './Toast.jsx';
 function MatchesIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="8" />
+      <circle cx="12" cy="12" r="9" />
+      <path
+        d="M12 8L15.8 10.8L14.3 15.2H9.7L8.2 10.8Z M12 8L12 5.5 M15.8 10.8L18.2 10.1 M14.3 15.2L15.8 17.2 M9.7 15.2L8.2 17.2 M8.2 10.8L5.8 10.1"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -20,7 +25,9 @@ function MatchesIcon() {
 function NewsIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M5 21V4a1 1 0 0 1 1-1h11l-2 4 2 4H6" strokeLinejoin="round" />
+      <path d="M3 10L14 5V19L3 14V10Z" strokeLinejoin="round" />
+      <path d="M7 14v4a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M17 9a5 5 0 0 1 0 6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -28,9 +35,9 @@ function NewsIcon() {
 function LeaguesIcon() {
   return (
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-      <line x1="4" y1="6" x2="20" y2="6" />
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <line x1="4" y1="18" x2="20" y2="18" />
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4z" strokeLinejoin="round" />
+      <path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 9v4M10 13h4l1 3H9l1-3zM8 19h8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

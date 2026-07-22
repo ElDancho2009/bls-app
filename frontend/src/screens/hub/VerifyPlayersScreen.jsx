@@ -9,6 +9,15 @@ const FILTERS = [
   { key: 'all', label: 'All' },
 ];
 
+function VerifiedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5L16 9.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function VerifyPlayersScreen() {
   const { token } = useAuth();
   const showToast = useToast();
@@ -58,7 +67,7 @@ export default function VerifyPlayersScreen() {
 
       {visiblePlayers.length === 0 && (
         <EmptyState
-          icon="✅"
+          icon={<VerifiedIcon />}
           title={
             filter === 'pending'
               ? 'All rostered players are verified!'

@@ -43,6 +43,16 @@ function fixtureDateLabel(isoString) {
   });
 }
 
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="4" y="5" width="16" height="15" rx="2" />
+      <path d="M4 9h16" />
+      <path d="M8 3v4M16 3v4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function MatchesScreen({ onSelectMatch }) {
   const [teams, setTeams] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -129,6 +139,14 @@ export default function MatchesScreen({ onSelectMatch }) {
     (m) => inDivision(m) && isSameDay(m.kickoff_at, selectedDate)
   );
 
+  const nextMatch = matches
+    .filter((m) => inDivision(m) && new Date(m.kickoff_at) > selectedDate)
+    .sort((a, b) => new Date(a.kickoff_at) - new Date(b.kickoff_at))[0];
+
+  const nextMatchLabel = nextMatch
+    ? `Next: ${teamsById[nextMatch.home_team_id]?.name} vs ${teamsById[nextMatch.away_team_id]?.name}, ${fixtureDateLabel(nextMatch.kickoff_at)}`
+    : undefined;
+
   return (
     <div className="matches-screen">
       <header className="screen-header brand-header">
@@ -190,7 +208,11 @@ export default function MatchesScreen({ onSelectMatch }) {
           <div className="state-message">No fixtures match "{query}".</div>
         )}
         {!isSearching && visibleMatches.length === 0 && (
-          <EmptyState icon="📅" title="No fixtures scheduled for this date." />
+          <EmptyState
+            icon={<CalendarIcon />}
+            title="No fixtures scheduled for this date."
+            subtitle={nextMatchLabel}
+          />
         )}
         {(isSearching ? searchResults : visibleMatches).map((match) => {
           const home = teamsById[match.home_team_id];

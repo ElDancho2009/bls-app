@@ -9,6 +9,16 @@ import IgExportModal, { assignToPitch } from './IgExportModal.jsx';
 const GOTW_VOTE_KEY = 'bls-gotw-voted-clip';
 const POTW_VOTE_KEY = 'bls-potw-voted-candidate';
 
+function NewsPaperIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 6h13a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V6z" strokeLinejoin="round" />
+      <path d="M17 20a1 1 0 0 0 1-1V8a1 1 0 0 1 1-1" />
+      <path d="M7 9h7M7 12h7M7 15h4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function votePercentages(items) {
   const total = items.reduce((sum, i) => sum + i.votes, 0) || 1;
   return Object.fromEntries(items.map((i) => [i.id, Math.round((i.votes / total) * 100)]));
@@ -146,7 +156,7 @@ export default function NewsScreen({ onSelectMatch }) {
           ))}
         </div>
       ) : (
-        <EmptyState icon="📰" title="No league bulletins published yet." />
+        <EmptyState icon={<NewsPaperIcon />} title="No league bulletins published yet." />
       )}
 
       {motw && (
