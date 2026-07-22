@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import PlayerDetailModal from './PlayerDetailModal.jsx';
 import Crest from '../Crest.jsx';
+import Skeleton from '../Skeleton.jsx';
 
 const DIVISION_LABELS = {
   first: 'First Division',
@@ -137,7 +138,27 @@ export default function CardsScreen({ onSelectTeam }) {
     [divisionStandings]
   );
 
-  if (loading) return <div className="state-message">Loading players…</div>;
+  if (loading) {
+    return (
+      <div className="cards-screen">
+        <header className="screen-header">
+          <div className="brand-title">PLAYERS</div>
+          <div className="screen-subtitle">Stat leaders across all divisions</div>
+        </header>
+        <div className="leaderboard-sections">
+          {Array.from({ length: 3 }).map((_, section) => (
+            <section key={section} className="leaderboard-section">
+              <div className="leaderboard-list">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} style={{ height: 46, borderRadius: 14 }} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
 
   const showSearch = query.trim().length > 0;

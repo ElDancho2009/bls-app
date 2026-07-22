@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
+import { useToast } from '../../ToastContext.jsx';
 import { api } from '../../api.js';
 
 const FILTERS = [
@@ -19,6 +20,7 @@ function initials(name) {
 
 export default function CheckinScreen() {
   const { team, token } = useAuth();
+  const showToast = useToast();
   const [nextMatch, setNextMatch] = useState(null);
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,7 @@ export default function CheckinScreen() {
     setPlayers((prev) =>
       prev.map((p) => (p.id === updated.playerId ? { ...p, checkedIn: updated.checkedIn } : p))
     );
+    showToast('Match check-in updated');
   }
 
   const visiblePlayers = useMemo(() => {

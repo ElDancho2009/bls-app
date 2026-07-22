@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import Crest from '../Crest.jsx';
+import Skeleton from '../Skeleton.jsx';
+import EmptyState from '../EmptyState.jsx';
 
 const DIVISIONS = [
   { key: 'all', label: 'All' },
@@ -60,7 +62,31 @@ export default function MatchesScreen({ onSelectMatch }) {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="state-message">Loading matches…</div>;
+  if (loading) {
+    return (
+      <div className="matches-screen">
+        <header className="screen-header brand-header">
+          <img className="brand-mark" src="/bls-logo.png" alt="BLS" />
+          <div>
+            <div className="brand-title">BOROUGH LEAGUE</div>
+            <div className="brand-subtitle">SOCCER</div>
+          </div>
+        </header>
+
+        <div className="chip-row day-row">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="day-chip" style={{ height: 52 }} />
+          ))}
+        </div>
+
+        <div className="fixture-list">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} style={{ height: 62, borderRadius: 16 }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="state-message error">Failed to load: {error}</div>;
 
   const teamsById = Object.fromEntries(teams.map((t) => [t.id, t]));
@@ -106,7 +132,7 @@ export default function MatchesScreen({ onSelectMatch }) {
   return (
     <div className="matches-screen">
       <header className="screen-header brand-header">
-        <div className="brand-mark" aria-hidden="true">BLS</div>
+        <img className="brand-mark" src="/bls-logo.png" alt="BLS" />
         <div>
           <div className="brand-title">BOROUGH LEAGUE</div>
           <div className="brand-subtitle">SOCCER</div>
@@ -164,7 +190,7 @@ export default function MatchesScreen({ onSelectMatch }) {
           <div className="state-message">No fixtures match "{query}".</div>
         )}
         {!isSearching && visibleMatches.length === 0 && (
-          <div className="state-message">No matches scheduled</div>
+          <EmptyState icon="📅" title="No fixtures scheduled for this date." />
         )}
         {(isSearching ? searchResults : visibleMatches).map((match) => {
           const home = teamsById[match.home_team_id];

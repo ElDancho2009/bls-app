@@ -7,6 +7,7 @@ import CardsScreen from './screens/CardsScreen.jsx';
 import TeamPageScreen from './screens/TeamPageScreen.jsx';
 import RefSheetScreen from './screens/RefSheetScreen.jsx';
 import TeamHubScreen from './screens/hub/TeamHubScreen.jsx';
+import Toast from './Toast.jsx';
 
 function MatchesIcon() {
   return (
@@ -116,6 +117,8 @@ export default function App() {
           ))}
         </nav>
       )}
+
+      <Toast />
     </div>
   );
 }

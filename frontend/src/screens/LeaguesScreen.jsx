@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import Crest from '../Crest.jsx';
+import Skeleton from '../Skeleton.jsx';
 
 const DIVISIONS = [
   { key: 'first', label: 'First Division' },
@@ -43,7 +44,13 @@ export default function LeaguesScreen({ onSelectTeam }) {
         ))}
       </div>
 
-      {loading && <div className="state-message">Loading standings…</div>}
+      {loading && (
+        <div className="standings-table" style={{ padding: '6px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} style={{ height: 20, borderRadius: 6 }} />
+          ))}
+        </div>
+      )}
       {error && <div className="state-message error">Failed to load: {error}</div>}
 
       {!loading && !error && (

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
+import { useToast } from '../../ToastContext.jsx';
 import { api } from '../../api.js';
 
 export const FORMATION_SLOTS = [
@@ -18,6 +19,7 @@ export const FORMATION_SLOTS = [
 
 export default function LineupBuilderScreen() {
   const { team, token } = useAuth();
+  const showToast = useToast();
   const [nextMatch, setNextMatch] = useState(null);
   const [roster, setRoster] = useState([]);
   const [lineup, setLineup] = useState({ slots: {}, bench: [] });
@@ -140,6 +142,7 @@ export default function LineupBuilderScreen() {
     try {
       await api.putMatchLineup(nextMatch.id, { formation: '4-3-3', players, bench: lineup.bench }, token);
       setSaveState('saved');
+      showToast('Lineup successfully locked in');
       setTimeout(() => setSaveState('idle'), 1500);
     } catch (err) {
       setError(err.message);

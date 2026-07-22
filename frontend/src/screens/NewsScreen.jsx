@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext.jsx';
+import { useToast } from '../ToastContext.jsx';
 import { api } from '../api.js';
 import Crest from '../Crest.jsx';
+import EmptyState from '../EmptyState.jsx';
 import IgExportModal, { assignToPitch } from './IgExportModal.jsx';
 
 const GOTW_VOTE_KEY = 'bls-gotw-voted-clip';
@@ -14,6 +16,7 @@ function votePercentages(items) {
 
 export default function NewsScreen({ onSelectMatch }) {
   const { user, token } = useAuth();
+  const showToast = useToast();
   const [bulletins, setBulletins] = useState([]);
   const [newsTitle, setNewsTitle] = useState('');
   const [newsBody, setNewsBody] = useState('');
@@ -81,6 +84,7 @@ export default function NewsScreen({ onSelectMatch }) {
       setBulletins((prev) => [created, ...prev]);
       setNewsTitle('');
       setNewsBody('');
+      showToast('Announcement published');
     } catch (err) {
       setPostError(err.message);
     } finally {
@@ -131,7 +135,7 @@ export default function NewsScreen({ onSelectMatch }) {
         </div>
       )}
 
-      {bulletins.length > 0 && (
+      {bulletins.length > 0 ? (
         <div className="bulletin-list">
           {bulletins.map((b) => (
             <div key={b.id} className="bulletin-card">
@@ -141,6 +145,8 @@ export default function NewsScreen({ onSelectMatch }) {
             </div>
           ))}
         </div>
+      ) : (
+        <EmptyState icon="📰" title="No league bulletins published yet." />
       )}
 
       {motw && (

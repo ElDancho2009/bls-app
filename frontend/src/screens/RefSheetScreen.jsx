@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext.jsx';
+import { useToast } from '../ToastContext.jsx';
 import { api } from '../api.js';
 import Crest from '../Crest.jsx';
 
 export default function RefSheetScreen({ matchId, onClose }) {
   const { user, token, loading: authLoading } = useAuth();
+  const showToast = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [assignedReferees, setAssignedReferees] = useState(null);
@@ -39,6 +41,7 @@ export default function RefSheetScreen({ matchId, onClose }) {
     try {
       const updated = await api.submitSignoff(matchId, { pin, motmPlayerId: Number(motmPick) }, token);
       setData((prev) => ({ ...prev, match: updated }));
+      showToast('Referee sign-off submitted');
     } catch (err) {
       setError(err.message);
     } finally {
