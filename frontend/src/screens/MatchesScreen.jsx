@@ -193,7 +193,7 @@ export default function MatchesScreen({ onSelectMatch }) {
           {days.map(({ offset, date }) => (
             <button
               key={offset}
-              className={`day-chip ${offset === 0 ? 'chip-active' : ''}`}
+              className={`day-chip ${dayLabel(date) === 'Today' ? 'day-chip-today' : ''}`}
               onClick={() => shiftSelectedDate(offset)}
             >
               <span className="day-dow">{dayLabel(date)}</span>

@@ -33,17 +33,19 @@ export default function TeamHubScreen() {
 
   return (
     <div className="hub-screen">
-      <div className="hub-topbar">
-        <div className="hub-topbar-identity">
-          {isCoach && <Crest src={team?.logo_url} size={32} />}
-          <div className="hub-team-name">
-            {isCoach ? `${team?.name} · Hub` : user.email}
+      {!isDirector && (
+        <div className="hub-topbar">
+          <div className="hub-topbar-identity">
+            {isCoach && <Crest src={team?.logo_url} size={32} />}
+            <div className="hub-team-name">
+              {isCoach ? `${team?.name} · Hub` : user.email}
+            </div>
           </div>
+          <button className="hub-signout" onClick={logout}>
+            Sign Out
+          </button>
         </div>
-        <button className="hub-signout" onClick={logout}>
-          Sign Out
-        </button>
-      </div>
+      )}
 
       {tabs.length > 0 && (
         <div className="chip-row hub-tab-row">

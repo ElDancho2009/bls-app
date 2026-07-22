@@ -13,6 +13,12 @@
   --warn: oklch(0.78 0.16 90);
   --danger: #d1293f;
   --glass-blur: blur(12px);
+  --brand-purple: #321E52;
+  --bg-purple-surface: #15111E;
+  --border-purple: rgba(90, 55, 140, 0.25);
+  --accent-gold-subtle: rgba(232, 168, 56, 0.15);
+  --accent-purple: #6B38C3;
+  --live-green: #10B981;
 }
 
 * {
@@ -223,12 +229,14 @@ button {
   font-weight: 700;
   font-size: 12.5px;
   background: var(--bg-elev);
+  border: 1px solid var(--border);
   color: var(--text-dim);
   white-space: nowrap;
 }
 
 .chip-active {
   background: var(--accent);
+  border-color: var(--accent);
   color: var(--accent-ink);
 }
 
@@ -256,8 +264,23 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  background: var(--bg-elev);
+  background: transparent;
   color: var(--text-dim);
+}
+
+.day-chip-today {
+  background: var(--bg-elev);
+  border: 1px solid rgba(232, 168, 56, 0.4);
+  color: #fff;
+  font-weight: 700;
+}
+
+.day-chip-today .day-dow {
+  color: var(--accent);
+}
+
+.day-chip-today .day-num {
+  color: #fff;
 }
 
 .day-dow {
@@ -287,13 +310,13 @@ button {
   background: var(--bg-elev);
   border-radius: 16px;
   padding: 14px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(232, 168, 56, 0.12);
   text-align: left;
   width: 100%;
 }
 
 .fixture-row.fixture-live {
-  border-color: var(--accent);
+  border-color: var(--live-green);
 }
 
 .fixture-team {
@@ -372,7 +395,7 @@ button {
 
 .tab-button.active {
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-purple);
 }
 
 .tab-icon {
@@ -695,6 +718,11 @@ button {
   padding: 11px 14px;
   color: var(--text);
   font-size: 13px;
+}
+
+.cards-search-input:focus {
+  outline: none;
+  border-color: rgba(107, 56, 195, 0.5);
 }
 
 /* Leaderboards */
@@ -1213,6 +1241,58 @@ button {
   flex-wrap: nowrap;
 }
 
+/* Director HQ header */
+.director-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 20px;
+  gap: 12px;
+}
+
+.director-account-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.director-account-email {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.director-role-tag {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 20px;
+  padding: 3px 8px;
+}
+
+.director-signout {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 7px 14px;
+  transition: border-color 150ms ease;
+}
+
+.director-signout:hover {
+  border-color: var(--accent);
+}
+
 /* Dashboard */
 .dashboard-screen {
   display: flex;
@@ -1376,13 +1456,20 @@ button {
 
 /* Director: admin command center */
 .admin-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 0 20px 24px;
 }
 
+.admin-subgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .admin-card {
+  position: relative;
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1391,11 +1478,50 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 150ms ease;
+  transition: border-color 150ms ease, transform 100ms ease;
 }
 
 .admin-card:hover {
   border-color: var(--accent);
+}
+
+.admin-card:active {
+  transform: scale(0.97);
+}
+
+.admin-hero-card {
+  position: relative;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, var(--bg-elev)), var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
+  border-radius: 18px;
+  padding: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent), 0 12px 32px -16px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: border-color 150ms ease, transform 100ms ease;
+}
+
+.admin-hero-card:hover {
+  border-color: var(--accent);
+}
+
+.admin-hero-card:active {
+  transform: scale(0.98);
+}
+
+.admin-hero-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-hero-arrow {
+  font-size: 20px;
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 .admin-card-icon {
@@ -1417,10 +1543,50 @@ button {
   letter-spacing: normal;
 }
 
+.admin-hero-card .admin-card-title {
+  font-size: 16px;
+}
+
 .admin-card-desc {
   font-size: 11px;
-  color: var(--text-faint);
+  color: var(--text-dim);
   line-height: 1.4;
+}
+
+.status-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.status-badge.gold {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.status-badge.info {
+  color: var(--text-dim);
+  background: color-mix(in srgb, var(--text-dim) 15%, transparent);
+  border: 1px solid var(--border);
+}
+
+.status-badge.success {
+  color: var(--live);
+  background: color-mix(in srgb, var(--live) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--live) 35%, transparent);
+}
+
+.status-badge.neutral {
+  color: var(--text-faint);
+  background: transparent;
+  border: 1px solid var(--border);
 }
 
 /* Team Hub: squad discipline */
@@ -1913,7 +2079,7 @@ button {
   background: var(--bg-elev);
   border-radius: 0 14px 14px 0;
   padding: 13px 14px 13px 12px;
-  border-left: 2px solid #FFD700;
+  border-left: 2px solid var(--accent-purple);
 }
 
 .bulletin-badge {
@@ -3013,8 +3179,7 @@ button {
 /* Matches: hero treatment for the live match, compact rows for everything else */
 .fixture-row-hero {
   padding: 20px 16px;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 24px -6px var(--accent);
+  border-color: var(--live-green);
   position: relative;
 }
 
@@ -3023,8 +3188,8 @@ button {
   top: -10px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--live-green);
+  color: #fff;
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
   font-size: 11px;
@@ -3181,12 +3346,13 @@ button {
   padding: 32px 20px;
   text-align: center;
   background: var(--bg-elev);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(232, 168, 56, 0.12);
   border-radius: 16px;
 }
 
 .empty-state-icon {
   margin-bottom: 10px;
+  color: var(--text-dim);
 }
 
 .empty-state-title {
@@ -3197,7 +3363,7 @@ button {
 
 .empty-state-subtitle {
   font-size: 12px;
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin-top: 4px;
 }
 
