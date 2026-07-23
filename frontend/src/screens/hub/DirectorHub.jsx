@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
 import { api } from '../../api.js';
 import EmptyState from '../../EmptyState.jsx';
+import ListRow from '../../ListRow.jsx';
 import VerifyPlayersScreen from './VerifyPlayersScreen.jsx';
 
 function VerifyIcon() {
@@ -42,37 +43,6 @@ function MatchOpsIcon() {
   );
 }
 
-const VERIFY_CARD = {
-  key: 'verify',
-  title: 'Player Verification',
-  description: 'Review pending eligibility and verify rostered players.',
-  Icon: VerifyIcon,
-};
-
-const SECONDARY_CARDS = [
-  {
-    key: 'referees',
-    title: 'Referee Management',
-    description: 'Add, remove, and assign match officials.',
-    Icon: RefereeIcon,
-    badge: { text: '12 Active', tone: 'info' },
-  },
-  {
-    key: 'roster',
-    title: 'Roster & Team Management',
-    description: 'Monitor team compliance and roster limits.',
-    Icon: RosterIcon,
-    badge: { text: '100% Locked', tone: 'success' },
-  },
-  {
-    key: 'matchops',
-    title: 'Match Operations',
-    description: 'Override official pitch sheets and match-day logistics.',
-    Icon: MatchOpsIcon,
-    badge: { text: 'Next: Sat', tone: 'neutral' },
-  },
-];
-
 const PLACEHOLDER_COPY = {
   referees: {
     Icon: RefereeIcon,
@@ -95,12 +65,17 @@ export default function DirectorHub() {
   const { user, logout } = useAuth();
   const [activeView, setActiveView] = useState('dashboard');
   const [pendingCount, setPendingCount] = useState(null);
+  const [refereeCount, setRefereeCount] = useState(null);
 
   useEffect(() => {
     api
       .getPlayers()
       .then((players) => setPendingCount(players.filter((p) => !p.verified).length))
       .catch(() => setPendingCount(null));
+    api
+      .getReferees()
+      .then((refs) => setRefereeCount(refs.length))
+      .catch(() => setRefereeCount(null));
   }, []);
 
   if (activeView === 'dashboard') {
@@ -120,33 +95,51 @@ export default function DirectorHub() {
           </button>
         </div>
 
-        <div className="admin-grid">
-          <button className="admin-hero-card" onClick={() => setActiveView(VERIFY_CARD.key)}>
-            {pendingCount !== null && (
-              <span className="status-badge gold">{pendingCount} Pending</span>
-            )}
-            <div className="admin-card-icon">
-              <VERIFY_CARD.Icon />
+        {pendingCount > 0 && (
+          <div className="action-banner">
+            <div className="action-banner-title">
+              {pendingCount} Player{pendingCount === 1 ? '' : 's'} Await Verification
             </div>
-            <div className="admin-hero-title-row">
-              <div className="admin-card-title">{VERIFY_CARD.title}</div>
-              <span className="admin-hero-arrow">→</span>
-            </div>
-            <div className="admin-card-desc">{VERIFY_CARD.description}</div>
-          </button>
-
-          <div className="admin-subgrid">
-            {SECONDARY_CARDS.map(({ key, title, description, Icon, badge }) => (
-              <button key={key} className="admin-card" onClick={() => setActiveView(key)}>
-                <span className={`status-badge ${badge.tone}`}>{badge.text}</span>
-                <div className="admin-card-icon">
-                  <Icon />
-                </div>
-                <div className="admin-card-title">{title}</div>
-                <div className="admin-card-desc">{description}</div>
-              </button>
-            ))}
+            <button className="action-banner-cta" onClick={() => setActiveView('verify')}>
+              Review Now
+            </button>
           </div>
+        )}
+
+        <div className="dashboard-card-label">MATCHDAY & OFFICIATING</div>
+        <div className="inset-list">
+          <ListRow
+            icon={<MatchOpsIcon />}
+            title="Match Operations"
+            badge="Soon"
+            badgeTone="neutral"
+            onClick={() => setActiveView('matchops')}
+          />
+          <ListRow
+            icon={<RefereeIcon />}
+            title="Referee Assignments"
+            badge={refereeCount !== null ? `${refereeCount} Referees` : '—'}
+            badgeTone="info"
+            onClick={() => setActiveView('referees')}
+          />
+        </div>
+
+        <div className="dashboard-card-label discipline-section-spacing">LEAGUE ADMINISTRATION</div>
+        <div className="inset-list">
+          <ListRow
+            icon={<VerifyIcon />}
+            title="Player Verification"
+            badge={pendingCount !== null ? `${pendingCount} Pending` : '—'}
+            badgeTone={pendingCount > 0 ? 'warn' : 'success'}
+            onClick={() => setActiveView('verify')}
+          />
+          <ListRow
+            icon={<RosterIcon />}
+            title="Roster & Team Management"
+            badge="Soon"
+            badgeTone="neutral"
+            onClick={() => setActiveView('roster')}
+          />
         </div>
       </div>
     );

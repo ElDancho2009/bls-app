@@ -285,28 +285,55 @@ app.post('/api/news', requireAuth, requireRole('league_director'), (req, res) =>
   res.status(201).json(created);
 });
 
+function cardIncidentsFor(player) {
+  return db
+    .prepare(
+      `SELECT me.minute, me.type,
+              CASE WHEN m.home_team_id = me.team_id THEN away.name ELSE home.name END AS opponent_name
+       FROM match_events me
+       JOIN matches m ON m.id = me.match_id
+       JOIN teams home ON home.id = m.home_team_id
+       JOIN teams away ON away.id = m.away_team_id
+       WHERE me.player_name = ? AND me.team_id = ? AND me.type IN ('yellow', 'red')
+       ORDER BY me.minute ASC`
+    )
+    .all(player.name, player.team_id);
+}
+
 app.get('/api/discipline', (req, res) => {
+  const { team_id } = req.query;
+  let teamId;
+  if (team_id !== undefined) {
+    teamId = Number(team_id);
+    if (!Number.isInteger(teamId)) {
+      return res.status(400).json({ error: 'team_id must be an integer.' });
+    }
+  }
+
   const suspended = db
     .prepare(
       `SELECT p.*, t.name AS team_name, t.logo_url AS team_logo_url
        FROM players p
        JOIN teams t ON t.id = p.team_id
-       WHERE p.red_cards >= 1
+       WHERE p.red_cards >= 1 ${teamId !== undefined ? 'AND p.team_id = ?' : ''}
        ORDER BY p.red_cards DESC`
     )
-    .all();
+    .all(...(teamId !== undefined ? [teamId] : []));
 
   const dangerZone = db
     .prepare(
       `SELECT p.*, t.name AS team_name, t.logo_url AS team_logo_url
        FROM players p
        JOIN teams t ON t.id = p.team_id
-       WHERE p.red_cards = 0 AND p.yellow_cards >= 2
+       WHERE p.red_cards = 0 AND p.yellow_cards >= 2 ${teamId !== undefined ? 'AND p.team_id = ?' : ''}
        ORDER BY p.yellow_cards DESC`
     )
-    .all();
+    .all(...(teamId !== undefined ? [teamId] : []));
 
-  res.json({ suspended, dangerZone });
+  res.json({
+    suspended: suspended.map((p) => ({ ...p, incidents: cardIncidentsFor(p) })),
+    dangerZone: dangerZone.map((p) => ({ ...p, incidents: cardIncidentsFor(p) })),
+  });
 });
 
 app.get('/api/gotw', (req, res) => {

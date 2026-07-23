@@ -69,7 +69,7 @@ export default function LeaguesScreen({ onSelectTeam }) {
           {standings.map((row, i) => (
             <button
               key={row.id}
-              className={`standings-row ${i === 0 ? 'standings-row-lead' : i < 3 ? 'standings-row-promo' : ''}`}
+              className={`standings-row ${i === 0 ? 'standings-row-lead' : ''}`}
               onClick={() => onSelectTeam(row.id)}
             >
               <div className="standings-rank">{i + 1}</div>

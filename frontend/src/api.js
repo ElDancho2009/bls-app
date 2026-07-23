@@ -68,7 +68,7 @@ export const api = {
   postNews: ({ title, body }, token) =>
     request('/news', { method: 'POST', body: JSON.stringify({ title, body }) }, token),
   getMatchOfWeek: () => request('/matches/motw'),
-  getDiscipline: () => request('/discipline'),
+  getDiscipline: (teamId) => request(`/discipline${teamId ? `?team_id=${teamId}` : ''}`),
 
   getGotw: () => request('/gotw'),
   voteGotw: (clipId) => request(`/gotw/${clipId}/vote`, { method: 'POST' }),

@@ -48,8 +48,6 @@ button {
 .clip-row,
 .leaderboard-row,
 .player-modal,
-.dashboard-card,
-.dashboard-stat,
 .bench-player,
 .squad-row,
 .post-open-date-form,
@@ -67,8 +65,6 @@ button {
 .clip-row,
 .leaderboard-row,
 .player-modal,
-.dashboard-card,
-.dashboard-stat,
 .bench-player,
 .squad-row,
 .post-open-date-form,
@@ -656,7 +652,7 @@ button {
   grid-template-columns: 20px 1fr 26px 22px 22px 22px 34px 38px;
   align-items: center;
   padding: 6px 20px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   width: 100%;
   text-align: left;
 }
@@ -812,9 +808,6 @@ button {
 }
 
 .leaderboard-card {
-  background: var(--bg-panel, #121212);
-  border: 1px solid var(--border, #262626);
-  border-radius: 14px;
   overflow: hidden;
 }
 
@@ -823,7 +816,7 @@ button {
   border: none;
   border-radius: 0;
   padding: 10px 14px;
-  border-bottom: 1px solid var(--border, #262626);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .leaderboard-card .leaderboard-row:last-child {
@@ -835,8 +828,8 @@ button {
 }
 
 .leaderboard-card .leaderboard-row:first-child .leaderboard-rank {
-  color: #FFD700;
-  font-weight: 800;
+  color: #FFFFFF;
+  font-weight: 700;
 }
 
 .leaderboard-card .skeleton {
@@ -1301,10 +1294,18 @@ button {
   padding: 0 20px 24px;
 }
 
-.dashboard-card {
-  background: var(--bg-elev);
+.matchday-hero {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.matchday-hero .pitch-sheet-trigger {
+  margin-top: 12px;
 }
 
 .dashboard-card-label {
@@ -1313,6 +1314,10 @@ button {
   letter-spacing: 1px;
   color: var(--text-faint);
   margin-bottom: 8px;
+}
+
+.discipline-section-spacing {
+  margin-top: 20px;
 }
 
 .dashboard-matchday-label {
@@ -1372,25 +1377,20 @@ button {
 
 .dashboard-stats-row {
   display: flex;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   overflow: hidden;
 }
 
 .dashboard-stat {
   flex: 1;
-  background: var(--bg-elev);
-  border-radius: 14px;
-  padding: 12px;
+  padding: 10px 8px;
   text-align: center;
 }
 
 .dashboard-stats-row .dashboard-stat {
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  border-right: 1px solid var(--border);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dashboard-stats-row .dashboard-stat:last-child {
@@ -1400,7 +1400,7 @@ button {
 .dashboard-stat-val {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 800;
-  font-size: 22px;
+  font-size: 20px;
   color: var(--live);
 }
 
@@ -1416,255 +1416,227 @@ button {
   margin-top: 2px;
 }
 
-.dashboard-links {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-top: 4px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
+/* Grouped inset list (iOS-style) — shared by Director HQ, Manager Hub quick
+   menu, and Squad Discipline. One shared row primitive instead of three
+   near-duplicate list implementations. */
+.inset-list {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 14px;
   overflow: hidden;
 }
 
-.dashboard-link {
-  background: transparent;
-  border-radius: 0;
-  padding: 14px 16px;
+.list-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-weight: 700;
-  font-size: 13px;
-  text-align: left;
+  gap: 12px;
   width: 100%;
-  border-bottom: 1px solid var(--border);
-  transition: background-color 150ms ease;
+  min-height: 48px;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.dashboard-link:last-child {
+.list-row:last-child {
   border-bottom: none;
 }
 
-.dashboard-link:hover {
-  background: #1A1F26;
+.list-row-icon {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--text-dim);
 }
 
-.dashboard-link-arrow {
+.list-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.list-row-title {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.list-row-subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list-row-badge {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.list-row-badge-neutral {
   color: var(--text-faint);
 }
 
-/* Director: admin command center */
-.admin-grid {
+.list-row-badge-info {
+  color: var(--text-dim);
+}
+
+.list-row-badge-warn {
+  color: var(--warn);
+}
+
+.list-row-badge-danger {
+  color: var(--danger);
+}
+
+.list-row-badge-success {
+  color: var(--live);
+}
+
+.list-row-chevron {
+  flex-shrink: 0;
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 0 20px 24px;
+  color: var(--text-faint);
 }
 
-.admin-subgrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.admin-card {
-  position: relative;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition: border-color 150ms ease, transform 100ms ease;
-}
-
-.admin-card:hover {
-  border-color: var(--accent);
-}
-
-.admin-card:active {
-  transform: scale(0.97);
-}
-
-.admin-hero-card {
-  position: relative;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, var(--bg-elev)), var(--bg-elev));
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
-  border-radius: 18px;
-  padding: 20px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent), 0 12px 32px -16px color-mix(in srgb, var(--accent) 60%, transparent);
-  transition: border-color 150ms ease, transform 100ms ease;
-}
-
-.admin-hero-card:hover {
-  border-color: var(--accent);
-}
-
-.admin-hero-card:active {
-  transform: scale(0.98);
-}
-
-.admin-hero-title-row {
+/* Director HQ: priority action banner */
+.action-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  background: color-mix(in srgb, var(--accent) 14%, #141416);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 0 20px 20px;
 }
 
-.admin-hero-arrow {
-  font-size: 20px;
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-.admin-card-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.admin-card-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+.action-banner-title {
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: normal;
+  font-size: 13px;
 }
 
-.admin-hero-card .admin-card-title {
-  font-size: 16px;
-}
-
-.admin-card-desc {
-  font-size: 11px;
-  color: var(--text-dim);
-  line-height: 1.4;
-}
-
-.status-badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+.action-banner-cta {
+  flex-shrink: 0;
+  background: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
-  font-size: 9.5px;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-  padding: 3px 9px;
+  font-size: 11.5px;
+  padding: 7px 12px;
   border-radius: 20px;
-}
-
-.status-badge.gold {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-}
-
-.status-badge.info {
-  color: var(--text-dim);
-  background: color-mix(in srgb, var(--text-dim) 15%, transparent);
-  border: 1px solid var(--border);
-}
-
-.status-badge.success {
-  color: var(--live);
-  background: color-mix(in srgb, var(--live) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--live) 35%, transparent);
-}
-
-.status-badge.neutral {
-  color: var(--text-faint);
-  background: transparent;
-  border: 1px solid var(--border);
+  white-space: nowrap;
 }
 
 /* Team Hub: squad discipline */
-.squad-discipline-card {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
+.squad-discipline {
+  display: flex;
+  flex-direction: column;
 }
 
-.squad-discipline-clean {
-  display: flex;
+.discipline-clean-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--live) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--live) 35%, transparent);
+  color: var(--live);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.discipline-clean-pill-neutral {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-faint);
+}
+
+.card-swatch {
+  width: 12px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.card-swatch-red {
+  background: var(--danger);
+}
+
+.card-swatch-yellow {
+  background: var(--warn);
+}
+
+.fair-play-card {
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   padding: 14px;
 }
 
-.squad-discipline-pill {
-  flex-shrink: 0;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: color-mix(in srgb, var(--live) 15%, transparent);
-  border: 1px solid color-mix(in srgb, var(--live) 45%, transparent);
-  color: var(--live);
-  font-weight: 800;
-  font-size: 10px;
-  letter-spacing: 0.5px;
-}
-
-.squad-discipline-clean-text {
-  font-size: 12px;
-  color: var(--text-dim);
-}
-
-.squad-discipline-row {
+.fair-play-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
-.squad-discipline-row:last-child {
-  border-bottom: none;
-}
-
-.squad-discipline-badge {
-  flex-shrink: 0;
-  padding: 3px 8px;
-  border-radius: 6px;
+.fair-play-tier {
   font-weight: 800;
-  font-size: 9px;
-  letter-spacing: 0.4px;
+  font-size: 14px;
 }
 
-.squad-discipline-badge-danger {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
+.fair-play-tier-success {
+  color: var(--live);
 }
 
-.squad-discipline-badge-warn {
+.fair-play-tier-info {
+  color: var(--text);
+}
+
+.fair-play-tier-warn {
   color: var(--warn);
-  background: color-mix(in srgb, var(--warn) 15%, transparent);
 }
 
-.squad-discipline-info {
-  min-width: 0;
+.fair-play-tier-danger {
+  color: var(--danger);
 }
 
-.squad-discipline-name {
+.fair-play-score {
+  font-size: 11px;
+  color: var(--text-faint);
   font-weight: 700;
-  font-size: 12.5px;
 }
 
-.squad-discipline-meta {
-  font-size: 10.5px;
-  color: var(--text-dim);
-  margin-top: 1px;
+.progress-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.progress-bar-fill-success {
+  background: var(--live);
+}
+
+.progress-bar-fill-info {
+  background: var(--text-dim);
+}
+
+.progress-bar-fill-warn {
+  background: var(--warn);
+}
+
+.progress-bar-fill-danger {
+  background: var(--danger);
 }
 
 /* Lineup builder */
@@ -2077,9 +2049,8 @@ button {
 
 .bulletin-card {
   background: var(--bg-elev);
-  border-radius: 0 14px 14px 0;
-  padding: 13px 14px 13px 12px;
-  border-left: 2px solid var(--accent-purple);
+  border-radius: 14px;
+  padding: 13px 14px;
 }
 
 .bulletin-badge {
@@ -2104,6 +2075,13 @@ button {
 
 .bulletin-header-row .bulletin-badge {
   margin-bottom: 0;
+  padding: 0;
+  background: transparent;
+  color: #8E8E93;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .bulletin-meta-tag {
@@ -3016,19 +2994,19 @@ button {
 .pitch-sheet-trigger {
   display: block;
   width: 100%;
+  height: 48px;
   text-align: center;
-  padding: 13px 0;
   border-radius: 12px;
-  background: var(--bg-panel);
-  border: 1px solid #FFD700;
-  color: #FFD700;
+  background: #FFFFFF;
+  border: none;
+  color: #000000;
   font-weight: 700;
-  font-size: 13px;
-  transition: background-color 150ms ease;
+  font-size: 14px;
+  transition: opacity 150ms ease;
 }
 
 .pitch-sheet-trigger:hover {
-  background: rgba(255, 215, 0, 0.08);
+  opacity: 0.88;
 }
 
 .pitch-sheet-overlay {
@@ -3203,18 +3181,10 @@ button {
   color: var(--accent);
 }
 
-/* Standings: rank highlights for league leader and promotion zone */
-.standings-row-lead {
-  background: linear-gradient(90deg, rgba(250, 204, 21, 0.12), transparent);
-  border-left: 3px solid var(--accent);
-}
-
+/* Standings: rank #1 gets a plain bold-white treatment, no border/glow */
 .standings-row-lead .standings-rank {
-  color: var(--accent);
-}
-
-.standings-row-promo {
-  border-left: 3px solid var(--live);
+  font-weight: 700;
+  color: #fff;
 }
 
 /* Player modal: trading-card tier gradients and position badge */

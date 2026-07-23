@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../../AuthContext.jsx';
 import { api } from '../../api.js';
 import PitchSheetModal from './PitchSheetModal.jsx';
+import SquadDiscipline from './SquadDiscipline.jsx';
+import ListRow from '../../ListRow.jsx';
 
-function dangerZoneMeta(player) {
-  return player.yellow_cards === 2
-    ? '1 yellow away from suspension'
-    : `${player.yellow_cards} yellow cards accumulated`;
-}
+const QUICK_MENU = [
+  { key: 'lineup', label: 'Lineup Builder' },
+  { key: 'squad', label: 'Squad View' },
+  { key: 'matchmaker', label: 'Friendly Matchmaker' },
+  { key: 'referees', label: 'Referees' },
+  { key: 'checkin', label: 'Check-in' },
+];
 
 export default function DashboardScreen({ onNavigate }) {
   const { team, token } = useAuth();
@@ -51,9 +55,6 @@ export default function DashboardScreen({ onNavigate }) {
 
   const teamsById = Object.fromEntries(teams.map((t) => [t.id, t]));
   const injuredCount = players.filter((p) => p.status === 'injured').length;
-  const suspendedPlayers = players.filter((p) => p.red_cards >= 1);
-  const dangerZonePlayers = players.filter((p) => p.red_cards === 0 && p.yellow_cards >= 2);
-  const hasDisciplineIssues = suspendedPlayers.length > 0 || dangerZonePlayers.length > 0;
 
   let opponentLine = null;
   let matchLocationTag = null;
@@ -77,7 +78,7 @@ export default function DashboardScreen({ onNavigate }) {
 
   return (
     <div className="dashboard-screen">
-      <div className="dashboard-card">
+      <div className="matchday-hero">
         <div className="dashboard-card-label dashboard-matchday-label">
           <span className="dashboard-matchday-dot" />
           NEXT MATCHDAY
@@ -92,6 +93,9 @@ export default function DashboardScreen({ onNavigate }) {
               <span className="dashboard-matchday-time">{dateTimeLine}</span>
               <span className="dashboard-matchday-venue">{venueLine}</span>
             </div>
+            <button className="pitch-sheet-trigger" onClick={() => setPitchSheetOpen(true)}>
+              Generate Pitch Sheet
+            </button>
           </>
         ) : (
           <div className="state-message">No upcoming matches scheduled.</div>
@@ -113,70 +117,14 @@ export default function DashboardScreen({ onNavigate }) {
         </div>
       </div>
 
-      <div>
-        <div className="dashboard-card-label">SQUAD DISCIPLINE</div>
-        <div className="squad-discipline-card">
-          {hasDisciplineIssues ? (
-            <div className="squad-discipline-rows">
-              {suspendedPlayers.map((p) => (
-                <div key={`susp-${p.id}`} className="squad-discipline-row">
-                  <span className="squad-discipline-badge squad-discipline-badge-danger">
-                    SUSPENDED
-                  </span>
-                  <div className="squad-discipline-info">
-                    <div className="squad-discipline-name">{p.name}</div>
-                    <div className="squad-discipline-meta">
-                      {p.red_cards} red card{p.red_cards === 1 ? '' : 's'} · 1 match ban
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {dangerZonePlayers.map((p) => (
-                <div key={`danger-${p.id}`} className="squad-discipline-row">
-                  <span className="squad-discipline-badge squad-discipline-badge-warn">
-                    AT RISK
-                  </span>
-                  <div className="squad-discipline-info">
-                    <div className="squad-discipline-name">{p.name}</div>
-                    <div className="squad-discipline-meta">{dangerZoneMeta(p)}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="squad-discipline-clean">
-              <span className="squad-discipline-pill">SQUAD ELIGIBLE</span>
-              <span className="squad-discipline-clean-text">
-                No suspensions or disciplinary flags
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+      <SquadDiscipline team={team} players={players} />
 
-      <div className="dashboard-links">
-        <button className="dashboard-link" onClick={() => onNavigate('lineup')}>
-          Lineup Builder <span className="dashboard-link-arrow">›</span>
-        </button>
-        <button className="dashboard-link" onClick={() => onNavigate('squad')}>
-          Squad View <span className="dashboard-link-arrow">›</span>
-        </button>
-        <button className="dashboard-link" onClick={() => onNavigate('matchmaker')}>
-          Friendly Matchmaker <span className="dashboard-link-arrow">›</span>
-        </button>
-        <button className="dashboard-link" onClick={() => onNavigate('referees')}>
-          Referees <span className="dashboard-link-arrow">›</span>
-        </button>
-        <button className="dashboard-link" onClick={() => onNavigate('checkin')}>
-          Check-in <span className="dashboard-link-arrow">›</span>
-        </button>
+      <div className="dashboard-card-label discipline-section-spacing">QUICK MENU</div>
+      <div className="inset-list">
+        {QUICK_MENU.map((item) => (
+          <ListRow key={item.key} title={item.label} onClick={() => onNavigate(item.key)} />
+        ))}
       </div>
-
-      {nextMatch && (
-        <button className="pitch-sheet-trigger" onClick={() => setPitchSheetOpen(true)}>
-          Generate Official Pitch Sheet
-        </button>
-      )}
 
       {pitchSheetOpen && (
         <PitchSheetModal matchId={nextMatch.id} onClose={() => setPitchSheetOpen(false)} />
